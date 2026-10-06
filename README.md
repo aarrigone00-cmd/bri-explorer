@@ -3,6 +3,8 @@
 An interactive, source-cited visualization of China's Belt and Road Initiative (BRI). It shows participating countries, a curated sample of flagship projects, the six economic corridors, and the land and maritime routes.
 
 - **Interactive world map** (Leaflet): zoom, pan, and click countries, projects, routes and corridors
+- **AidData finance records**: 1,297 Chinese official loan and grant commitments for infrastructure (2013–2021) from AidData's Global Chinese Development Finance Dataset v3. Each one has its amount, lender, status and dates; outlines appear when you zoom in
+- **Latest engagement (2025–2026)** from the Griffith Asia Institute / GFDC BRI investment reports, in the dashboard and in country panels
 - **Project markers** for rail, ports, roads, energy and other projects, with distinct icons. Approximate alignments are drawn for linear projects. Hollow markers mean a project was not yet complete in the selected year
 - **Country panel** showing GFDC participation status and MoU date, region, projects in the dataset, sectors, corridors and reported financing
 - **Project panel** showing location, type, reported cost and what that figure measures, start and completion, status, Chinese organizations, local partners, description and references
@@ -76,6 +78,8 @@ All data lives in `public/data/` as plain JSON, so you can update it without tou
 | `projects.json` | 45 flagship projects | Widely reported public information. Each project links to a reference |
 | `corridors.json` | The six economic corridors (schematic) | NDRC/MFA/MOFCOM *Vision and Actions* (2015) |
 | `routes.json` | Land and maritime routes (schematic) | Same as above |
+| `aiddata-records.json` | 1,297 AidData finance records (generated, see below) | AidData GCDF v3 (ODC-By) and GeoGCDF v3, geometry from OpenStreetMap (ODbL) |
+| `bri-engagement.json` | Headline 2025 / 2026 H1 engagement figures | Nedopil (2026), *China BRI Investment Report 2025*; GFDC *2026 H1* update; MOFCOM as cited there |
 | `sources.json` | Source registry shown in the Sources section | — |
 | `world-50m.json` | Country boundaries in TopoJSON, annotated with ISO3 codes (generated) | Natural Earth via `world-atlas` |
 
@@ -114,6 +118,23 @@ Add an object to `public/data/projects.json` following the `Project` type in `sr
   "sourceIds": ["wikipedia"]            // ids from sources.json
 }
 ```
+
+### Rebuilding the AidData layer
+
+`public/data/aiddata-records.json` is generated from AidData's public GitHub repository:
+
+```bash
+git clone --depth 1 https://github.com/aiddata/gcdf-geospatial-data /tmp/gcdf
+node scripts/build-aiddata.mjs /tmp/gcdf/input_data/gcdf_v3/final_input.csv /tmp/gcdf/latest/geojsons
+```
+
+The filter at the top of `scripts/build-aiddata.mjs` selects records flagged by AidData as physical infrastructure, in the transport, energy, communications, industry/mining/construction and water sectors, committed 2013–2021. Rail, port and road types are assigned from keywords in the record titles. The lender is taken from AidData's title ("China Eximbank provides…"). Geometry is simplified to about 1 km.
+
+**Licences:** AidData's data is ODC-By, so credit AidData (done in the map attribution, panels and Sources). The geometry is derived from OpenStreetMap under ODbL, so credit OSM and keep the derived file openly available. It is, as a public file in this repo and site.
+
+### Updating the latest engagement figures
+
+Edit `public/data/bri-engagement.json` when GFDC / Griffith publish a new report, and use only figures stated in the report text. The per-year values are only shown as charts, so don't estimate them from the images.
 
 ### Updating the participation list
 

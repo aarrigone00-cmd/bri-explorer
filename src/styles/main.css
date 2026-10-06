@@ -1337,6 +1337,50 @@ svg {
   color: var(--text-muted);
 }
 
+/* AidData records & engagement */
+.swatch--dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--c-energy);
+  box-shadow: 4px 0 0 -1px var(--c-road), -4px 0 0 -1px var(--c-rail);
+  margin: 0 5px;
+}
+.dot--small {
+  width: 7px;
+  height: 7px;
+  margin: 0 1.5px;
+}
+.fill--aiddata {
+  background: var(--accent);
+}
+.fill--engagement {
+  background: var(--route-maritime);
+}
+.dashboard__subhead {
+  font-family: var(--font-serif);
+  font-size: 21px;
+  font-weight: 600;
+  margin: 36px 0 4px;
+}
+.dashboard__lede {
+  margin: 0 0 14px;
+  max-width: 900px;
+}
+.leaflet-tooltip.map-tooltip--wide {
+  max-width: 320px;
+  white-space: normal;
+}
+.link-row__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bars__row {
+  grid-template-columns: minmax(110px, 42%) 1fr 44px;
+}
+
 /* ==========================================================================
    Authentication
    ========================================================================== */

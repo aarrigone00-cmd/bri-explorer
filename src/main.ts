@@ -25,6 +25,7 @@ async function main() {
       road: true,
       energy: true,
       other: true,
+      aiddata: true,
       corridors: true,
       land: true,
       maritime: true,
@@ -66,6 +67,7 @@ async function main() {
   store.subscribe((s, prev) => {
     if (!s.selection || s.selection === prev.selection) return;
     if (s.selection.kind === 'country') map.focusCountry(s.selection.iso3);
+    else if (s.selection.kind === 'record') map.focusRecord(s.selection.id);
     else map.focusProject(s.selection.id);
   });
 

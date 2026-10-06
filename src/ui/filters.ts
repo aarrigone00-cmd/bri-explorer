@@ -12,6 +12,7 @@ export function initFilters(data: Dataset, store: Store): void {
   const counts = new Map<string, number>();
   for (const p of data.projects) counts.set(p.type, (counts.get(p.type) ?? 0) + 1);
   counts.set('corridors', data.corridors.length);
+  counts.set('aiddata', data.records.length);
   counts.set('land', data.routes.filter((r) => r.kind === 'land').length);
   counts.set('maritime', data.routes.filter((r) => r.kind === 'maritime').length);
 

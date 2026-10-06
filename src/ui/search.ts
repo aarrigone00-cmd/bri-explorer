@@ -8,7 +8,7 @@ interface Entry {
   sub: string;
   haystack: string;
   selection: NonNullable<Selection>;
-  kind: 'country' | 'project';
+  kind: 'country' | 'project' | 'record';
   type?: string;
 }
 
@@ -50,6 +50,18 @@ export function initSearch(data: Dataset, store: Store): void {
     });
   }
 
+  for (const r of data.records) {
+    const country = participants.get(r.iso3)?.name ?? r.iso3;
+    entries.push({
+      label: r.title,
+      sub: `AidData #${r.id} · ${r.subtype} · ${country}${r.commitmentYear ? ` · ${r.commitmentYear}` : ''}`,
+      haystack: normalize(`${r.title} ${country} ${r.id} ${r.lender ?? ''}`),
+      selection: { kind: 'record', id: r.id },
+      kind: 'record',
+      type: r.type,
+    });
+  }
+
   let matches: Entry[] = [];
   let active = -1;
 
@@ -67,7 +79,7 @@ export function initSearch(data: Dataset, store: Store): void {
       results.innerHTML = matches
         .map(
           (m, i) => `<li id="sr-${i}" role="option" aria-selected="${i === active}" data-index="${i}" class="search__item${i === active ? ' is-active' : ''}">
-            <span class="${m.kind === 'project' ? `dot dot--${m.type}` : 'dot dot--country'}"></span>
+            <span class="${m.kind === 'country' ? 'dot dot--country' : `dot dot--${m.type}${m.kind === 'record' ? ' dot--small' : ''}`}"></span>
             <span class="search__text"><span class="search__label">${escapeHtml(m.label)}</span><span class="search__sub">${escapeHtml(m.sub)}</span></span></li>`,
         )
         .join('');
@@ -89,7 +101,8 @@ export function initSearch(data: Dataset, store: Store): void {
     if (!q) return close();
     const starts = entries.filter((e) => normalize(e.label).startsWith(q));
     const contains = entries.filter((e) => !starts.includes(e) && e.haystack.includes(q));
-    matches = [...starts, ...contains].slice(0, 8);
+    const rank = (e: Entry) => (e.kind === 'record' ? 1 : 0);
+    matches = [...starts, ...contains].sort((a, b) => rank(a) - rank(b)).slice(0, 10);
     active = matches.length ? 0 : -1;
     renderResults();
   });

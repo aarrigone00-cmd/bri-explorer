@@ -7,6 +7,7 @@ export type ProjectType = 'rail' | 'port' | 'road' | 'energy' | 'other';
 
 export type ProjectStatus =
   | 'operational'
+  | 'completed'
   | 'partially-operational'
   | 'under-construction'
   | 'planned'
@@ -88,6 +89,39 @@ export interface Source {
   license?: string;
 }
 
+/**
+ * One Chinese official-sector financial commitment (loan or grant) from
+ * AidData's GCDF v3. Several records can relate to the same physical project.
+ */
+export interface FinanceRecord {
+  id: number; // AidData Record ID
+  title: string; // AidData's record title, verbatim
+  iso3: string;
+  sector: string; // AidData sector name
+  type: ProjectType;
+  subtype: string;
+  status: 'completed' | 'under-construction' | 'planned';
+  amountUsd2021: number | null; // commitment, constant 2021 USD
+  commitmentYear: number | null;
+  startYear: number | null;
+  completionYear: number | null;
+  lender: string | null; // parsed from the record title
+  precise: boolean; // all OSM features precisely located
+  osm: string | null; // first OpenStreetMap feature link
+  coordinates: LatLng;
+  shapes?: LatLng[][]; // simplified outlines of long (linear) features
+  paths?: LatLng[][];
+}
+
+export interface Engagement {
+  meta: { note: string; unit: string; sourceIds: string[] };
+  periods: { period: string; construction: number; investment: number; total: number; deals: string; change: string; sourceId: string }[];
+  cumulative: { asOf: string; total: number; construction: number; investment: number; sourceId: string }[];
+  highlights2025: { label: string; value: number; note: string }[];
+  countries2025: { measure: string; sourceId: string; values: Record<string, number> };
+  official: { label: string; items: { label: string; value: number; note: string }[]; sourceId: string; note: string };
+}
+
 export interface Dataset {
   projects: Project[];
   projectsMeta: { asOf: string; description: string; costBasisLabels: Record<CostBasis, string> };
@@ -98,16 +132,20 @@ export interface Dataset {
   routes: Route[];
   routesNote: string;
   sources: Source[];
+  records: FinanceRecord[];
+  recordsNote: string;
+  engagement: Engagement;
   /** GeoJSON features for country boundaries, keyed by ISO3 where known. */
   world: GeoJSON.FeatureCollection<GeoJSON.Polygon | GeoJSON.MultiPolygon, { name: string; iso3: string | null }>;
 }
 
 /** Map layers that can be toggled from the filter panel. */
-export type LayerKey = ProjectType | 'corridors' | 'land' | 'maritime' | 'participants';
+export type LayerKey = ProjectType | 'aiddata' | 'corridors' | 'land' | 'maritime' | 'participants';
 
 export type Selection =
   | { kind: 'country'; iso3: string }
   | { kind: 'project'; id: string }
+  | { kind: 'record'; id: number }
   | null;
 
 export type ThemePreference = 'light' | 'dark' | 'system';

@@ -1,7 +1,7 @@
 import { COST_BASIS_SHORT, PROJECT_TYPES, STATUS_LABELS } from '../config';
-import { formatUsdMillions, participationAt, projectStatusAt, projectVisibleAt } from '../lib/analytics';
+import { formatUsd, formatUsdMillions, participationAt, projectStatusAt, projectVisibleAt, recordStatusAt, recordVisibleAt } from '../lib/analytics';
 import type { Store } from '../state/store';
-import type { Dataset, Project } from '../types';
+import type { Dataset, FinanceRecord, Project } from '../types';
 import { $, escapeHtml, safeUrl } from './dom';
 
 const fmtDate = (iso: string) =>
@@ -17,6 +17,8 @@ export function initDetailPanel(data: Dataset, store: Store): void {
   const worldName = new Map(data.world.features.filter((f) => f.properties.iso3).map((f) => [f.properties.iso3!, f.properties.name]));
   const sourceById = new Map(data.sources.map((s) => [s.id, s]));
   const corridorById = new Map(data.corridors.map((c) => [c.id, c]));
+  const recordById = new Map(data.records.map((r) => [r.id, r]));
+  const engagement = data.engagement;
 
   panel.querySelector('[data-close-detail]')!.addEventListener('click', () => store.set({ selection: null }));
   document.addEventListener('keydown', (e) => {
@@ -24,10 +26,11 @@ export function initDetailPanel(data: Dataset, store: Store): void {
   });
 
   body.addEventListener('click', (e) => {
-    const t = (e.target as HTMLElement).closest<HTMLElement>('[data-select-project],[data-select-country]');
+    const t = (e.target as HTMLElement).closest<HTMLElement>('[data-select-project],[data-select-country],[data-select-record]');
     if (!t) return;
     if (t.dataset.selectProject) store.set({ selection: { kind: 'project', id: t.dataset.selectProject } });
     if (t.dataset.selectCountry) store.set({ selection: { kind: 'country', iso3: t.dataset.selectCountry } });
+    if (t.dataset.selectRecord) store.set({ selection: { kind: 'record', id: Number(t.dataset.selectRecord) } });
   });
 
   function sourceLine(ids: string[]) {
@@ -105,7 +108,94 @@ export function initDetailPanel(data: Dataset, store: Store): void {
                .join('')}</ul>`
           : '<p class="muted">No single reported USD figure available in this dataset.</p>'
       }
-      <p class="source-note">Participation: ${sourceLine(['gfdc-countries-2025'])}. Projects: see the individual project references.</p>
+      ${countryRecords(iso3, year)}
+      ${countryEngagement(iso3)}
+      <p class="source-note">Participation: ${sourceLine(['gfdc-countries-2025'])}. Flagship projects: see the individual project references. Finance records: ${sourceLine(['aiddata-gcdf-v3'])}.</p>
+    `;
+  }
+
+  function countryRecords(iso3: string, year: number): string {
+    const all = data.records.filter((r) => r.iso3 === iso3);
+    if (!all.length) {
+      return `<h3>AidData finance records (2013–2021)</h3><p class="muted">No physical-infrastructure records in the AidData extract used here.</p>`;
+    }
+    const visible = all.filter((r) => recordVisibleAt(r, year));
+    const withAmt = visible.filter((r) => r.amountUsd2021 !== null);
+    const total = withAmt.reduce((s, r) => s + r.amountUsd2021!, 0);
+    const byType = new Map<string, number>();
+    for (const r of visible) byType.set(PROJECT_TYPES[r.type].plural, (byType.get(PROJECT_TYPES[r.type].plural) ?? 0) + 1);
+    const largest = [...withAmt].sort((a, b) => b.amountUsd2021! - a.amountUsd2021!).slice(0, 6);
+    return `
+      <h3>AidData finance records (2013–${Math.min(year, 2021)})</h3>
+      <p><strong>${visible.length}</strong> Chinese official loan or grant commitment${visible.length === 1 ? '' : 's'} for infrastructure${
+        withAmt.length ? `, totalling <strong>≈ ${formatUsd(total)}</strong> (constant 2021 USD, ${withAmt.length} with a recorded amount)` : ''
+      }.</p>
+      ${byType.size ? `<p class="muted small">${[...byType.entries()].map(([k, v]) => `${escapeHtml(k)}: ${v}`).join(' · ')}</p>` : ''}
+      ${
+        largest.length
+          ? `<ul class="link-list">${largest
+              .map(
+                (r) => `<li><button type="button" class="link-row" data-select-record="${r.id}">
+                  <span class="dot dot--${r.type}"></span><span class="link-row__text">${escapeHtml(shortTitle(r))}</span>
+                  <span class="muted">${formatUsd(r.amountUsd2021!)}</span></button></li>`,
+              )
+              .join('')}</ul>`
+          : ''
+      }
+      <p class="muted small">Commitments are not disbursements, and several records can belong to one project.</p>`;
+  }
+
+  function countryEngagement(iso3: string): string {
+    const v = engagement.countries2025.values[iso3];
+    if (v === undefined) return '';
+    return `<h3>Recent engagement (2025)</h3>
+      <p>${escapeHtml(engagement.countries2025.measure)}: <strong>≈ US$${v >= 1 ? `${v} bn` : `${Math.round(v * 1000)} m`}</strong> (preliminary).</p>
+      <p class="muted small">Source: ${sourceLine([engagement.countries2025.sourceId])}.</p>`;
+  }
+
+  /** AidData titles read "Lender provides $X for <project>"; show the project part. */
+  function shortTitle(r: FinanceRecord): string {
+    const m = r.title.match(/\bfor (?:the )?(.+)$/i);
+    const t = (m ? m[1] : r.title).replace(/\s*\((?:linked|Linked)[^)]*\)?\s*$/, '');
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  }
+
+  function renderRecord(r: FinanceRecord, year: number) {
+    const statusAtYear = recordStatusAt(r, year);
+    const country = byIso.get(r.iso3)?.name ?? worldName.get(r.iso3) ?? r.iso3;
+    const STATUS_TEXT: Record<FinanceRecord['status'], string> = {
+      completed: 'Completed',
+      'under-construction': 'In implementation',
+      planned: 'Committed, not yet implemented',
+    };
+    body.innerHTML = `
+      <div class="detail__kicker"><span class="dot dot--${r.type}"></span>AidData record #${r.id} · ${escapeHtml(r.subtype)}</div>
+      <h2 class="detail__title">${escapeHtml(shortTitle(r))}</h2>
+      <div class="badges">
+        <span class="badge badge--project-${r.status === 'completed' ? 'operational' : r.status}">${STATUS_TEXT[r.status]}</span>
+        ${statusAtYear !== (r.status as string) ? `<span class="badge">In ${year}: ${escapeHtml(STATUS_LABELS[statusAtYear])}</span>` : ''}
+        <span class="badge">${r.precise ? 'Precisely located' : 'Approximate location'}</span>
+      </div>
+      <p class="callout">“${escapeHtml(r.title)}”<br><span class="muted small">Record title as published by AidData</span></p>
+      <dl class="facts">
+        <div><dt>Country</dt><dd><button type="button" class="inline-link" data-select-country="${r.iso3}">${escapeHtml(country)}</button></dd></div>
+        <div><dt>AidData sector</dt><dd>${escapeHtml(r.sector.charAt(0) + r.sector.slice(1).toLowerCase())}</dd></div>
+        <div><dt>Committed</dt><dd>${r.commitmentYear ?? '<span class="muted">Unknown</span>'}</dd></div>
+        <div><dt>Implementation</dt><dd>${r.startYear ?? '?'} – ${r.completionYear ?? (r.status === 'completed' ? '?' : 'ongoing')}</dd></div>
+        <div class="facts__wide"><dt>Commitment amount</dt><dd>${
+          r.amountUsd2021 !== null
+            ? `${formatUsd(r.amountUsd2021)} <span class="muted small">(constant 2021 USD, as recorded by AidData)</span>`
+            : '<span class="muted">No amount recorded</span>'
+        }</dd></div>
+        <div class="facts__wide"><dt>Chinese financier</dt><dd>${r.lender ? escapeHtml(r.lender) : '<span class="muted">Not stated in the record title</span>'}</dd></div>
+      </dl>
+      <p class="muted small">Implementing agencies and local counterparts are recorded in the full AidData GCDF v3 dataset, which isn't included in this extract.</p>
+      <h3>References</h3>
+      <ul class="plain-list">
+        <li><a href="${safeUrl(sourceById.get('aiddata-gcdf-v3')!.url)}" target="_blank" rel="noopener">AidData GCDF v3 dataset (Record ID ${r.id})</a></li>
+        ${r.osm ? `<li><a href="${safeUrl(r.osm)}" target="_blank" rel="noopener">Location on OpenStreetMap</a></li>` : ''}
+      </ul>
+      <p class="source-note">${escapeHtml(data.recordsNote)} Source: ${sourceLine(['aiddata-gcdf-v3', 'aiddata-geogcdf-v3'])}; geometry © OpenStreetMap contributors (ODbL).</p>
     `;
   }
 
@@ -152,7 +242,11 @@ export function initDetailPanel(data: Dataset, store: Store): void {
       return;
     }
     if (selection.kind === 'country') renderCountry(selection.iso3, year);
-    else {
+    else if (selection.kind === 'record') {
+      const rec = recordById.get(selection.id);
+      if (!rec) return;
+      renderRecord(rec, year);
+    } else {
       const p = data.projects.find((x) => x.id === selection.id);
       if (!p) return;
       renderProject(p, year);

@@ -10,6 +10,57 @@
       "license": "Cite as: Nedopil, Christoph (2025): \"Countries of the Belt and Road Initiative\"; Shanghai, Green Finance & Development Center, FISF Fudan University, www.greenfdc.org"
     },
     {
+      "id": "aiddata-gcdf-v3",
+      "title": "Global Chinese Development Finance Dataset, Version 3.0",
+      "publisher": "AidData, William & Mary (2023)",
+      "url": "https://www.aiddata.org/data/aiddatas-global-chinese-development-finance-dataset-version-3-0",
+      "kind": "dataset",
+      "usedFor": "The AidData layer: 1,297 Chinese official-sector loan and grant commitments for physical infrastructure (transport, energy, communications, industry, water) committed 2013–2021, including amounts, status, dates and lenders.",
+      "license": "Open Data Commons Attribution License (ODC-By 1.0). Cite: Custer, S. et al. 2023. Tracking Chinese Development Finance: An Application of AidData's TUFF 3.0 Methodology. Williamsburg, VA: AidData at William & Mary; and Dreher, A., Fuchs, A., Parks, B.C., Strange, A., Tierney, M.J. 2022. Banking on Beijing. Cambridge University Press."
+    },
+    {
+      "id": "aiddata-geogcdf-v3",
+      "title": "Geospatial Global Chinese Development Finance Dataset, Version 3.0",
+      "publisher": "Goodman, S., Zhang, S., Malik, A.A., Parks, B.C., Hall, J. — Scientific Data 11, 529 (2024)",
+      "url": "https://github.com/aiddata/gcdf-geospatial-data",
+      "kind": "dataset",
+      "usedFor": "Locations and simplified outlines of AidData records (derived from OpenStreetMap features identified by AidData).",
+      "license": "AidData data: ODC-By 1.0. OpenStreetMap-derived geometry: ODbL 1.0. The derived file public/data/aiddata-records.json is published openly under ODbL. DOI: 10.1038/s41597-024-03341-w"
+    },
+    {
+      "id": "osm",
+      "title": "OpenStreetMap",
+      "publisher": "© OpenStreetMap contributors",
+      "url": "https://www.openstreetmap.org/copyright",
+      "kind": "geodata",
+      "usedFor": "Underlying geometry of AidData project locations.",
+      "license": "Open Database License (ODbL 1.0)"
+    },
+    {
+      "id": "gfdc-bri-2025",
+      "title": "China Belt and Road Initiative (BRI) Investment Report 2025",
+      "publisher": "Nedopil, C. (January 2026) — Griffith Asia Institute and Green Finance & Development Center, FISF Fudan University. DOI: 10.25904/1912/5857",
+      "url": "https://greenfdc.org/china-belt-and-road-initiative-bri-investment-report-2025/",
+      "kind": "report",
+      "usedFor": "Latest engagement figures for 2025 (construction contracts and investments in BRI countries), sector and regional highlights, cumulative engagement since 2013. Preliminary figures."
+    },
+    {
+      "id": "gfdc-bri-2026h1",
+      "title": "China's investment and construction engagement in the Belt and Road Initiative (BRI) 2026 H1",
+      "publisher": "Nedopil, C. — Green Finance & Development Center, FISF Fudan University",
+      "url": "https://greenfdc.org/chinas-investment-and-construction-engagement-in-the-belt-and-road-initiative-bri-2026-h1/",
+      "kind": "report",
+      "usedFor": "Engagement in the first half of 2026 and cumulative engagement since 2013. Preliminary figures."
+    },
+    {
+      "id": "mofcom-2025",
+      "title": "Investment and cooperation with Belt and Road partner countries, January–November 2025",
+      "publisher": "Ministry of Commerce of the PRC (MOFCOM)",
+      "url": "https://fec.mofcom.gov.cn/article/fwydyl/tjsj/202512/20251203613450.shtml",
+      "kind": "official",
+      "usedFor": "China's official statistics on direct investment and new contracts in BRI partner countries (as cited in Nedopil 2026)."
+    },
+    {
       "id": "ndrc-vision-2015",
       "title": "Vision and Actions on Jointly Building Silk Road Economic Belt and 21st-Century Maritime Silk Road",
       "publisher": "National Development and Reform Commission, Ministry of Foreign Affairs and Ministry of Commerce of the PRC (March 2015)",
@@ -32,14 +83,6 @@
       "url": "https://en.wikipedia.org/",
       "kind": "secondary",
       "usedFor": "Project summaries (dates, lengths, capacities, contractors, reported costs). Each project links to its article; the articles cite the underlying news and official sources."
-    },
-    {
-      "id": "aiddata",
-      "title": "Global Chinese Development Finance Dataset",
-      "publisher": "AidData, William & Mary",
-      "url": "https://www.aiddata.org/",
-      "kind": "further-reading",
-      "usedFor": "Recommended for extending this dataset with project-level financing records."
     },
     {
       "id": "bu-gdp",

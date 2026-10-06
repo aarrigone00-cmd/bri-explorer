@@ -1,6 +1,6 @@
 // Pure functions over the dataset. Everything shown in the dashboard is
 // computed here from the loaded data — nothing is hard-coded.
-import type { CostBasis, Dataset, ParticipationCountry, Project, ProjectStatus, ProjectType } from '../types';
+import type { CostBasis, Dataset, FinanceRecord, ParticipationCountry, Project, ProjectStatus, ProjectType } from '../types';
 
 export type ParticipationStatus = 'participant' | 'exited' | 'unconfirmed' | 'not-yet' | 'none';
 
@@ -39,6 +39,9 @@ export function yearRange(d: Dataset): { min: number; max: number } {
     const e = yearOf(c.exitDate);
     if (m) years.push(m);
     if (e) years.push(e);
+  }
+  for (const r of d.records) {
+    if (r.commitmentYear) years.push(r.commitmentYear);
   }
   const asOf = Number(d.projectsMeta.asOf.slice(0, 4));
   if (asOf) years.push(asOf);
@@ -110,4 +113,62 @@ export function computeStats(d: Dataset, year: number): Stats {
 
 export function formatUsdMillions(m: number): string {
   return m >= 1000 ? `US$${(m / 1000).toFixed(1)} bn` : `US$${Math.round(m)} m`;
+}
+
+// ---- AidData finance records ---------------------------------------------------
+
+/** Records appear on the timeline in the year the finance was committed. */
+export function recordVisibleAt(r: FinanceRecord, year: number): boolean {
+  return r.commitmentYear === null || r.commitmentYear <= year;
+}
+
+export function recordStatusAt(r: FinanceRecord, year: number): ProjectStatus {
+  if (r.completionYear !== null && r.completionYear <= year) return 'completed';
+  if (r.startYear !== null && r.startYear <= year) return r.status === 'completed' ? 'under-construction' : r.status;
+  if (r.completionYear !== null || r.startYear !== null) return 'planned';
+  return r.status;
+}
+
+export interface RecordStats {
+  count: number;
+  countries: number;
+  withAmount: number;
+  totalUsd: number;
+  byType: [ProjectType, number][];
+  amountByType: [ProjectType, number][];
+  amountByYear: [string, number][];
+  topCountries: [string, number][];
+  topLenders: [string, number][];
+}
+
+export function computeRecordStats(records: FinanceRecord[], year: number): RecordStats {
+  const visible = records.filter((r) => recordVisibleAt(r, year));
+  const sumBy = <K extends string>(key: (r: FinanceRecord) => K | null) => {
+    const m = new Map<K, number>();
+    for (const r of visible) {
+      const k = key(r);
+      if (k === null || r.amountUsd2021 === null) continue;
+      m.set(k, (m.get(k) ?? 0) + r.amountUsd2021);
+    }
+    return [...m.entries()].sort((a, b) => b[1] - a[1]);
+  };
+  const withAmount = visible.filter((r) => r.amountUsd2021 !== null);
+  return {
+    count: visible.length,
+    countries: new Set(visible.map((r) => r.iso3)).size,
+    withAmount: withAmount.length,
+    totalUsd: withAmount.reduce((s, r) => s + r.amountUsd2021!, 0),
+    byType: tally(visible.map((r) => r.type)),
+    amountByType: sumBy((r) => r.type),
+    amountByYear: sumBy((r) => (r.commitmentYear ? String(r.commitmentYear) : null)).sort((a, b) => a[0].localeCompare(b[0])),
+    topCountries: sumBy((r) => r.iso3).slice(0, 8),
+    topLenders: tally(visible.map((r) => r.lender ?? 'Not stated in record title')).slice(0, 6),
+  };
+}
+
+/** Compact USD formatting for whole-dollar amounts. */
+export function formatUsd(v: number): string {
+  if (v >= 1e9) return `US$${(v / 1e9).toFixed(v >= 1e11 ? 0 : 1)} bn`;
+  if (v >= 1e6) return `US$${(v / 1e6).toFixed(v >= 1e8 ? 0 : 1)} m`;
+  return `US$${Math.round(v).toLocaleString('en-US')}`;
 }

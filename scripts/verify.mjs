@@ -123,6 +123,40 @@ try {
         check(earlyParticipants < participants, `[${tag}] timeline 2014 shows fewer participants (${earlyParticipants})`);
         await page.screenshot({ path: `${outDir}/${tag}-2014.png` });
 
+        // AidData records: search, panel, country summary
+        await page.evaluate(() => {
+          const r = document.querySelector('#timeline-range');
+          r.value = r.max;
+          r.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+        await page.fill('#search-input', 'Souapiti');
+        await page.waitForSelector('#search-results:not([hidden]) .search__item');
+        await page.keyboard.press('Enter');
+        await page.waitForSelector('#detail-panel:not([hidden])');
+        const kicker = await page.textContent('.detail__kicker');
+        check(/AidData record #\d+/.test(kicker ?? ''), `[${tag}] search finds an AidData record ("${kicker?.trim()}")`);
+        const recText = await page.textContent('#detail-body');
+        check(/constant 2021 USD/.test(recText) && /Export-Import Bank of China/.test(recText), `[${tag}] record panel shows amount and lender`);
+        await page.waitForTimeout(1200);
+        await page.screenshot({ path: `${outDir}/${tag}-record.png` });
+        await page.click('[data-select-country]');
+        await page.waitForFunction(() => document.querySelector('.detail__title')?.textContent === 'Guinea');
+        const cText = await page.textContent('#detail-body');
+        check(/AidData finance records/.test(cText) && /Chinese official loan or grant commitment/.test(cText), `[${tag}] country panel summarises AidData records`);
+        await page.click('[data-close-detail]');
+        const recCount = await page.evaluate(() => window.bri.data.records.length);
+        check(recCount > 1000, `[${tag}] AidData records loaded (${recCount})`);
+        // Canvas layer draws the record dots
+        const canvasDrawn = await page.evaluate(() => {
+          const c = document.querySelector('.leaflet-records-pane canvas');
+          if (!c) return false;
+          const ctx = c.getContext('2d');
+          const d = ctx.getImageData(0, 0, c.width, c.height).data;
+          for (let i = 3; i < d.length; i += 4 * 97) if (d[i] > 0) return true;
+          return false;
+        });
+        check(canvasDrawn, `[${tag}] AidData dots drawn on the map canvas`);
+
         // Filters: turn off rail
         if (await page.locator('#filters-panel[hidden]').count()) await page.click('#filters-toggle');
         await page.uncheck('input[data-layer="rail"]');
@@ -132,6 +166,8 @@ try {
         // Dashboard
         await page.locator('#dashboard').scrollIntoViewIfNeeded();
         await page.waitForTimeout(300);
+        const dashText = await page.textContent('#dashboard');
+        check(/AidData, 2013–/.test(dashText) && /Latest BRI engagement/.test(dashText) && /213\.5/.test(dashText), `[${tag}] dashboard shows AidData and 2025–2026 engagement sections`);
         const statCount = await page.locator('.stat').count();
         check(statCount >= 4, `[${tag}] dashboard stats rendered (${statCount})`);
         await page.locator('#dashboard').screenshot({ path: `${outDir}/${tag}-dashboard.png` });

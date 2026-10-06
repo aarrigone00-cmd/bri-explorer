@@ -23,6 +23,7 @@ export function initLegend(store: Store): void {
         );
       }
     }
+    if (layers.aiddata) items.push('<span class="legend__item"><span class="swatch swatch--dot"></span>AidData record</span>');
     items.push('<span class="legend__item"><span class="pm pm--other pm--under-construction pm--mini pm--blank"></span>Hollow = not yet complete</span>');
     el.innerHTML = items.join('');
   };

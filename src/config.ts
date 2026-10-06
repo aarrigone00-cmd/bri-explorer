@@ -21,6 +21,7 @@ export const PROJECT_TYPES: Record<ProjectType, { label: string; plural: string;
 
 export const STATUS_LABELS: Record<ProjectStatus, string> = {
   operational: 'Operational',
+  completed: 'Completed',
   'partially-operational': 'Partially operational',
   'under-construction': 'Under construction',
   planned: 'Planned / agreed',
@@ -39,7 +40,7 @@ export interface LayerDef {
   key: LayerKey;
   label: string;
   group: 'Projects' | 'Routes & corridors' | 'Countries';
-  swatch: 'marker' | 'land' | 'maritime' | 'corridor' | 'fill';
+  swatch: 'marker' | 'land' | 'maritime' | 'corridor' | 'fill' | 'dot';
 }
 
 export const LAYERS: LayerDef[] = [
@@ -48,6 +49,7 @@ export const LAYERS: LayerDef[] = [
   { key: 'road', label: 'Roads & bridges', group: 'Projects', swatch: 'marker' },
   { key: 'energy', label: 'Energy', group: 'Projects', swatch: 'marker' },
   { key: 'other', label: 'Other (parks, urban, airports)', group: 'Projects', swatch: 'marker' },
+  { key: 'aiddata', label: 'AidData finance records (2013–2021)', group: 'Projects', swatch: 'dot' },
   { key: 'corridors', label: 'Economic corridors', group: 'Routes & corridors', swatch: 'corridor' },
   { key: 'land', label: 'Land routes (Silk Road Economic Belt)', group: 'Routes & corridors', swatch: 'land' },
   { key: 'maritime', label: 'Maritime routes (21st-Century MSR)', group: 'Routes & corridors', swatch: 'maritime' },

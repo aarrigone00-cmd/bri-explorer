@@ -1,0 +1,53 @@
+{
+  "meta": {
+    "note": "Headline figures as stated in the text of the cited reports (preliminary, rounded). They measure Chinese construction contracts and non-financial investments (state-owned and private) in the 150 BRI countries, so they are not comparable with AidData's official-finance commitments.",
+    "unit": "USD billion (current)",
+    "sourceIds": ["gfdc-bri-2025", "gfdc-bri-2026h1"]
+  },
+  "periods": [
+    {
+      "period": "2025",
+      "construction": 128.4,
+      "investment": 85.2,
+      "total": 213.5,
+      "deals": "about 350",
+      "change": "Construction +81% and investment +62% vs. 2024; the highest annual total recorded since 2013",
+      "sourceId": "gfdc-bri-2025"
+    },
+    {
+      "period": "2026 H1",
+      "construction": 76.5,
+      "investment": 49.8,
+      "total": 126.4,
+      "deals": "about 186",
+      "change": "Record first half overall; construction +USD 12.2 bn and investment −USD 6.2 bn vs. 2025 H1",
+      "sourceId": "gfdc-bri-2026h1"
+    }
+  ],
+  "cumulative": [
+    { "asOf": "End of 2025", "total": 1399, "construction": 837, "investment": 561, "sourceId": "gfdc-bri-2025" },
+    { "asOf": "Mid-2026", "total": 1539, "construction": 926, "investment": 614, "sourceId": "gfdc-bri-2026h1" }
+  ],
+  "highlights2025": [
+    { "label": "Energy-related engagement", "value": 93.9, "note": "Highest since 2013" },
+    { "label": "Oil and gas", "value": 71.5, "note": "More than triple the previous record (2024)" },
+    { "label": "Metals and mining", "value": 32.6, "note": "Mostly investment" },
+    { "label": "Technology and manufacturing", "value": 28.7, "note": "Data centres, EV batteries, hydrogen" },
+    { "label": "Green energy (wind, solar, waste-to-energy)", "value": 18.3, "note": "Over 22 GW planned capacity" },
+    { "label": "Africa (all engagement)", "value": 61.2, "note": "+283% vs. 2024; top region" }
+  ],
+  "countries2025": {
+    "measure": "Construction engagement in 2025",
+    "sourceId": "gfdc-bri-2025",
+    "values": { "NGA": 24.6, "COG": 23.1, "SAU": 19.8, "IRQ": 4.5, "IDN": 3.3, "PAK": 0.039 }
+  },
+  "official": {
+    "label": "China's Ministry of Commerce (MOFCOM), January–November 2025",
+    "items": [
+      { "label": "Non-financial direct investment in BRI partner countries", "value": 35.7, "note": "+18.4%" },
+      { "label": "Value of newly signed project contracts", "value": 201.7, "note": "+20.4%" }
+    ],
+    "sourceId": "mofcom-2025",
+    "note": "As reported in Nedopil (2026). MOFCOM does not publish which countries it counts, so totals differ from independent estimates."
+  }
+}

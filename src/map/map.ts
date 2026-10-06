@@ -1,13 +1,14 @@
 import L from 'leaflet';
 import { PROJECT_TYPES, STATUS_LABELS, TILE_ATTRIBUTION, TILE_URL } from '../config';
-import { participationAt, projectStatusAt, projectVisibleAt } from '../lib/analytics';
+import { formatUsd, participationAt, projectStatusAt, projectVisibleAt, recordStatusAt, recordVisibleAt } from '../lib/analytics';
 import type { AppState, Store } from '../state/store';
-import type { Dataset, LatLng, Project } from '../types';
+import type { Dataset, FinanceRecord, LatLng, Project, ProjectType } from '../types';
 import { escapeHtml } from '../ui/dom';
 
 export interface MapController {
   focusCountry(iso3: string): void;
   focusProject(id: string): void;
+  focusRecord(id: number): void;
   invalidateSize(): void;
 }
 
@@ -17,6 +18,7 @@ const PANES = {
   corridors: 410,
   routes: 420,
   projectLines: 430,
+  records: 440,
 } as const;
 
 export function createMap(el: HTMLElement, data: Dataset, store: Store): MapController {
@@ -38,6 +40,9 @@ export function createMap(el: HTMLElement, data: Dataset, store: Store): MapCont
   L.control.zoom({ position: 'bottomright' }).addTo(map);
   map.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>');
   map.attributionControl.addAttribution('Boundaries: <a href="https://www.naturalearthdata.com/">Natural Earth</a>');
+  map.attributionControl.addAttribution(
+    'Finance records: <a href="https://www.aiddata.org/data/aiddatas-global-chinese-development-finance-dataset-version-3-0">AidData</a> (ODC-By); record geometry &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors (ODbL)',
+  );
 
   for (const [name, z] of Object.entries(PANES)) {
     const pane = map.createPane(name);
@@ -172,6 +177,65 @@ export function createMap(el: HTMLElement, data: Dataset, store: Store): MapCont
     }
   }
 
+  // ---- AidData finance records (canvas: ~1,300 features) ---------------------
+  const recordRenderer = L.canvas({ pane: 'records', padding: 0.3, tolerance: 4 });
+  const recordGroup = L.layerGroup().addTo(map);
+  const recordShapes = L.layerGroup();
+  type RecordShape = L.Path & { getBounds(): L.LatLngBounds };
+  const recordLayers = new Map<number, { dot: L.CircleMarker; shape?: RecordShape }>();
+  const typeColor = () => {
+    const cs = getComputedStyle(document.documentElement);
+    const c = (t: ProjectType) => cs.getPropertyValue(`--c-${t}`).trim() || '#999';
+    return { rail: c('rail'), port: c('port'), road: c('road'), energy: c('energy'), other: c('other'), ring: cs.getPropertyValue('--marker-ring').trim(), sel: cs.getPropertyValue('--selected-stroke').trim() };
+  };
+  let colors = typeColor();
+  const recordTooltip = (rec: FinanceRecord) =>
+    `<strong>${escapeHtml(rec.subtype)} · AidData #${rec.id}</strong><br><span>${escapeHtml(rec.title.length > 110 ? `${rec.title.slice(0, 110)}…` : rec.title)}</span>${
+      rec.amountUsd2021 !== null ? `<br><span>${formatUsd(rec.amountUsd2021)} committed (2021 USD)</span>` : ''
+    }`;
+  for (const rec of data.records) {
+    const dot = L.circleMarker(rec.coordinates, { renderer: recordRenderer, radius: 4, weight: 1, fillOpacity: 0.85 });
+    dot.bindTooltip(recordTooltip(rec), { direction: 'top', offset: [0, -4], className: 'map-tooltip map-tooltip--wide' });
+    dot.on('click', () => store.set({ selection: { kind: 'record', id: rec.id } }));
+    let shape: RecordShape | undefined;
+    if (rec.shapes?.length) shape = L.polygon(rec.shapes, { renderer: recordRenderer, weight: 1.5, fillOpacity: 0.45 });
+    else if (rec.paths?.length) shape = L.polyline(rec.paths, { renderer: recordRenderer, weight: 2 });
+    shape?.on('click', () => store.set({ selection: { kind: 'record', id: rec.id } }));
+    recordLayers.set(rec.id, { dot, shape });
+  }
+  // Outlines only once zoomed in, to keep the world view uncluttered.
+  const SHAPE_ZOOM = 5;
+  const syncShapeVisibility = () => toggle(recordShapes, map.getZoom() >= SHAPE_ZOOM);
+  map.on('zoomend', syncShapeVisibility);
+
+  function updateRecords(state: AppState) {
+    for (const rec of data.records) {
+      const entry = recordLayers.get(rec.id)!;
+      const visible = state.layers.aiddata && state.layers[rec.type] && recordVisibleAt(rec, state.year);
+      const selected = state.selection?.kind === 'record' && state.selection.id === rec.id;
+      const status = recordStatusAt(rec, state.year);
+      const color = colors[rec.type];
+      if (visible) {
+        entry.dot.setStyle({
+          color: selected ? colors.sel : status === 'completed' ? colors.ring : color,
+          fillColor: color,
+          fillOpacity: status === 'completed' ? 0.85 : 0.25,
+          weight: selected ? 3 : status === 'completed' ? 0.8 : 1.5,
+        });
+        entry.dot.setRadius(selected ? 7 : 4);
+        if (!recordGroup.hasLayer(entry.dot)) recordGroup.addLayer(entry.dot);
+        if (selected) entry.dot.bringToFront();
+        if (entry.shape) {
+          entry.shape.setStyle({ color: selected ? colors.sel : color, fillColor: color });
+          if (!recordShapes.hasLayer(entry.shape)) recordShapes.addLayer(entry.shape);
+        }
+      } else {
+        recordGroup.removeLayer(entry.dot);
+        if (entry.shape) recordShapes.removeLayer(entry.shape);
+      }
+    }
+  }
+
   const toggle = (layer: L.Layer, on: boolean) => {
     if (on && !map.hasLayer(layer)) layer.addTo(map);
     if (!on && map.hasLayer(layer)) layer.remove();
@@ -183,6 +247,9 @@ export function createMap(el: HTMLElement, data: Dataset, store: Store): MapCont
     toggle(routeGroups.maritime, state.layers.maritime);
     styleCountries(state);
     updateProjects(state);
+    if (!prev || prev.resolvedTheme !== state.resolvedTheme) colors = typeColor();
+    updateRecords(state);
+    syncShapeVisibility();
     if (!prev || prev.showLabels !== state.showLabels || prev.resolvedTheme !== state.resolvedTheme) updateLabels(state);
   }
 
@@ -213,6 +280,17 @@ export function createMap(el: HTMLElement, data: Dataset, store: Store): MapCont
       } else {
         const z = Math.max(map.getZoom(), 6);
         const target = map.unproject(map.project(p.coordinates, z).add(panelOffset()), z);
+        map.flyTo(target, z, { duration: 0.9 });
+      }
+    },
+    focusRecord(id) {
+      const e = recordLayers.get(id);
+      if (!e) return;
+      if (e.shape) {
+        map.flyToBounds(e.shape.getBounds(), { paddingBottomRight: panelPadding(), paddingTopLeft: [40, 80], maxZoom: 9, duration: 0.9 });
+      } else {
+        const z = Math.max(map.getZoom(), 7);
+        const target = map.unproject(map.project(e.dot.getLatLng(), z).add(panelOffset()), z);
         map.flyTo(target, z, { duration: 0.9 });
       }
     },
