@@ -9,6 +9,8 @@ export interface AppState {
   /** Effective theme after resolving "system". */
   resolvedTheme: 'light' | 'dark';
   showLabels: boolean;
+  /** Signed-in user (Supabase Auth), or null. */
+  user: { id: string; email: string } | null;
 }
 
 type Listener = (state: AppState, prev: AppState) => void;

@@ -4,6 +4,7 @@ import { loadDataset } from './data/loader';
 import { yearRange } from './lib/analytics';
 import { createMap } from './map/map';
 import { Store } from './state/store';
+import { initAuth } from './ui/auth';
 import { initDashboard } from './ui/dashboard';
 import { initDetailPanel } from './ui/detail';
 import { $ } from './ui/dom';
@@ -34,8 +35,10 @@ async function main() {
     theme,
     resolvedTheme: resolveTheme(theme),
     showLabels: true,
+    user: null,
   });
   initTheme(store);
+  void initAuth(store);
 
   let data;
   try {

@@ -5,6 +5,12 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  # Supabase Auth (email login). These are the project URL and the PUBLISHABLE
+  # key, which are public by design: they are shipped to every browser, and
+  # access is controlled by Supabase Auth + Row Level Security. Never add the
+  # secret / service_role key here. Values set in the Netlify UI override these.
+  VITE_SUPABASE_URL = "https://wfgcnwsfftjsgqtcwlyd.supabase.co"
+  VITE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_iEe8hTQ9fdIOsSSJe1KJIw_PXj0IMN7"
 
 # Long-lived caching for fingerprinted assets.
 [[headers]]

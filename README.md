@@ -13,7 +13,9 @@ An interactive, source-cited visualization of China's Belt and Road Initiative (
 - **Sources & methodology** section
 - **Themes**: dark, light and system. Responsive layout for desktop, tablet and phone
 
-No API keys or secrets are required.
+- **Email login** (optional, Supabase Auth): sign up, sign in, sign out, forgot/reset password. The site stays fully public; login only adds an account to build features on (`store.get().user`).
+
+No secret keys are used anywhere in the frontend.
 
 ## Quick start
 
@@ -28,7 +30,7 @@ Requires Node 20+ (Netlify is pinned to Node 22 in `netlify.toml`).
 
 ### Verifying
 
-`npm run verify` builds nothing itself. Run it after `npm run build`. It starts `vite preview` and drives the app in headless Chromium at desktop, tablet and phone sizes in both color schemes. It checks that markers, routes and country shading render, and that search, panels, timeline, filters, dashboard and theme switching work with no console errors. It also checks there is no horizontal overflow. Screenshots go to `./screenshots/`. Set `CHROMIUM_PATH` if Chromium is not at the default path.
+`npm run verify` also runs `scripts/verify-auth.mjs`, which tests every login flow against a mocked Supabase Auth API, so it sends no email and creates no users. `npm run verify` builds nothing itself. Run it after `npm run build`. It starts `vite preview` and drives the app in headless Chromium at desktop, tablet and phone sizes in both color schemes. It checks that markers, routes and country shading render, and that search, panels, timeline, filters, dashboard and theme switching work with no console errors. It also checks there is no horizontal overflow. Screenshots go to `./screenshots/`. Set `CHROMIUM_PATH` if Chromium is not at the default path.
 
 ## Deploying to Netlify
 
@@ -38,13 +40,31 @@ The repo includes `netlify.toml`:
 - Publish directory: `dist`
 - Node 22, cache headers for hashed assets, revalidation for `/data/*`
 
-Connect the repository in Netlify (**Add new site → Import an existing project**) and accept the detected settings. No environment variables are needed.
+Connect the repository in Netlify (**Add new site → Import an existing project**) and accept the detected settings. No environment variables need to be set in Netlify; the public Supabase values are in `netlify.toml`, and anything you set in the Netlify UI overrides them.
 
 ### Environment variables and secrets
 
 - The app has **no hard-coded keys**. The optional place-name labels use free CARTO basemap tiles, which need no key. Check CARTO's attribution and usage terms if you expect heavy traffic. You can turn labels off in the Layers panel or point them elsewhere with `VITE_TILE_URL` (see `.env.example`).
 - Any variable prefixed `VITE_` is **embedded in the public bundle**, so never put secrets there.
 - For future features that need secrets (news APIs, AI providers), add a [Netlify Function](https://docs.netlify.com/functions/overview/) under `netlify/functions/`. Read the key from `process.env` in the function, set it in **Site settings → Environment variables**, and call the function from the frontend.
+
+## Email login (Supabase)
+
+Login uses [Supabase Auth](https://supabase.com/docs/guides/auth) with email + password. Supabase project: `wfgcnwsfftjsgqtcwlyd`.
+
+- Configured by `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`, set in `netlify.toml` for deploys and in `.env.local` for local dev (copy `.env.example`). These are the **publishable** values, which Supabase designs to be public; they ship to every browser regardless of where they are set. Never use the secret / `service_role` key in a `VITE_` variable.
+- If either variable is missing, the Sign in button is hidden and the site works as before.
+- `supabase-js` is loaded as a separate chunk so it doesn't slow the map's first load.
+- Code: `src/auth/supabase.ts` (client) and `src/ui/auth.ts` (header button + dialog). The signed-in user is available as `store.get().user` for future features, e.g. saved views protected by Row Level Security.
+
+### One-time Supabase dashboard settings
+
+These can't be changed through the database, so they're done in the dashboard (**Authentication → URL Configuration**):
+
+1. **Site URL**: your Netlify URL, e.g. `https://your-site.netlify.app`. Confirmation and reset emails link here.
+2. **Redirect URLs**: add `https://your-site.netlify.app/**` and `http://localhost:5173/**`.
+
+**Email delivery:** Supabase's built-in email sender only delivers to members of your Supabase organization's team, and only a few emails per hour. To let anyone sign up, add a custom SMTP provider (e.g. Resend, Postmark, SendGrid) under **Authentication → Emails → SMTP Settings**. Alternatively, turn off **Confirm email** under **Authentication → Sign In / Providers → Email** so sign-ups don't need an email; password reset still sends one.
 
 ## Data
 
@@ -119,7 +139,8 @@ src/
   state/store.ts        tiny observable store (layers, year, selection, theme)
   lib/analytics.ts      pure stats and timeline functions (dashboard, map)
   map/map.ts            Leaflet map, layers and focus helpers
-  ui/                   detail panel, filters, search, timeline, legend, dashboard, sources, theme
+  auth/supabase.ts      lazily created Supabase client (email login)
+  ui/                   auth dialog, detail panel, filters, search, timeline, legend, dashboard, sources, theme
   styles/main.css       design tokens (dark/light) and layout
 ```
 
