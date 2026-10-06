@@ -1,0 +1,37 @@
+{
+  "name": "bri-explorer",
+  "version": "1.0.0",
+  "description": "Interactive map and data visualization of China's Belt and Road Initiative.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "data": "node scripts/build-data.mjs",
+    "typecheck": "tsc --noEmit",
+    "verify": "node scripts/verify.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aarrigone00-cmd/bri-explorer.git"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/aarrigone00-cmd/bri-explorer/issues"
+  },
+  "homepage": "https://github.com/aarrigone00-cmd/bri-explorer#readme",
+  "dependencies": {
+    "leaflet": "^1.9.4",
+    "topojson-client": "^3.1.0"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.22",
+    "@types/topojson-client": "^3.1.5",
+    "i18n-iso-countries": "^7.14.0",
+    "playwright-core": "^1.63.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.3",
+    "world-atlas": "^2.0.2"
+  },
+  "private": true,
+  "type": "module"
+}

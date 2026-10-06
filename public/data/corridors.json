@@ -1,0 +1,63 @@
+{
+  "meta": {
+    "note": "Lines are schematic. They follow the general direction of each corridor as described in official documents and do not show actual infrastructure alignments.",
+    "sourceIds": ["ndrc-vision-2015"]
+  },
+  "corridors": [
+    {
+      "id": "new-eurasian-land-bridge",
+      "name": "New Eurasian Land Bridge",
+      "countries": ["CHN", "KAZ", "RUS", "BLR", "POL", "DEU", "NLD"],
+      "description": "A rail-based corridor from China's east coast through Kazakhstan, Russia and Belarus to Western Europe, carrying much of the China–Europe freight train traffic.",
+      "paths": [[[34.6, 119.2], [34.75, 113.65], [34.27, 108.94], [36.06, 103.83], [43.82, 87.62], [44.21, 80.4], [43.24, 76.9], [51.17, 71.43], [55.75, 37.62], [53.9, 27.56], [52.1, 23.7], [52.23, 21.01], [52.52, 13.4], [51.43, 6.76], [51.92, 4.48]]]
+    },
+    {
+      "id": "china-mongolia-russia",
+      "name": "China–Mongolia–Russia Economic Corridor",
+      "countries": ["CHN", "MNG", "RUS"],
+      "description": "Links northern China with Mongolia and Russia through two main routes, via Erenhot–Ulaanbaatar and via Manzhouli. Agreed in 2016.",
+      "paths": [
+        [[39.9, 116.4], [43.65, 111.98], [47.92, 106.92], [51.83, 107.6]],
+        [[39.9, 116.4], [45.75, 126.65], [49.6, 117.4], [52.03, 113.5]]
+      ]
+    },
+    {
+      "id": "china-central-west-asia",
+      "name": "China–Central Asia–West Asia Economic Corridor",
+      "countries": ["CHN", "KAZ", "KGZ", "TJK", "UZB", "TKM", "IRN", "TUR"],
+      "description": "Runs from Xinjiang through Central Asia to Iran and on to Türkiye and the Mediterranean.",
+      "paths": [[[43.82, 87.62], [44.21, 80.4], [43.24, 76.9], [42.87, 74.59], [41.3, 69.24], [39.65, 66.96], [37.95, 58.38], [35.69, 51.39], [39.93, 32.85], [41.0, 28.98]]]
+    },
+    {
+      "id": "china-indochina",
+      "name": "China–Indochina Peninsula Economic Corridor",
+      "countries": ["CHN", "VNM", "LAO", "KHM", "THA", "MYS", "SGP", "MMR"],
+      "description": "Connects southern China (Kunming, Nanning) with mainland Southeast Asia down to Singapore.",
+      "paths": [
+        [[25.04, 102.71], [21.18, 101.67], [17.97, 102.6], [13.75, 100.5], [3.14, 101.69], [1.29, 103.85]],
+        [[22.82, 108.32], [21.03, 105.85], [16.05, 108.2], [11.56, 104.92], [13.75, 100.5]]
+      ]
+    },
+    {
+      "id": "cpec",
+      "name": "China–Pakistan Economic Corridor (CPEC)",
+      "countries": ["CHN", "PAK"],
+      "description": "A bilateral corridor launched in 2013 that links Kashgar in Xinjiang with the Arabian Sea ports of Gwadar and Karachi, and that covers energy, transport and special economic zones.",
+      "paths": [
+        [[39.47, 75.99], [36.85, 75.43], [35.92, 74.31], [33.69, 73.05], [31.55, 74.34], [30.17, 71.52], [27.7, 68.86], [24.86, 67.0]],
+        [[33.69, 73.05], [31.83, 70.9], [30.18, 66.98], [25.13, 62.32]]
+      ]
+    },
+    {
+      "id": "bcim",
+      "name": "Bangladesh–China–India–Myanmar Corridor / China–Myanmar Economic Corridor",
+      "countries": ["CHN", "MMR", "BGD", "IND"],
+      "description": "The original four-country BCIM corridor has seen limited progress, and India has not endorsed the BRI. Since 2017–2018, China and Myanmar have pursued a bilateral China–Myanmar Economic Corridor towards Mandalay, Yangon and Kyaukphyu.",
+      "paths": [
+        [[25.04, 102.71], [23.98, 97.86], [21.97, 96.08], [24.82, 93.94], [23.81, 90.41], [22.57, 88.36]],
+        [[21.97, 96.08], [16.84, 96.17]],
+        [[21.97, 96.08], [19.43, 93.55]]
+      ]
+    }
+  ]
+}

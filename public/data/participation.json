@@ -1,0 +1,1830 @@
+{
+  "source": "gfdc-countries-2025",
+  "note": "Likely MoU signing and exit dates as compiled by the Green Finance & Development Center (GFDC), Fudan University. Countries without a date are those for which GFDC could not find independent confirmation of an MoU.",
+  "countries": [
+    {
+      "iso3": "AFG",
+      "name": "Afghanistan",
+      "region": "South Asia",
+      "incomeGroup": "Low income",
+      "mouDate": "2023-05-01",
+      "exitDate": null,
+      "labelPoint": [
+        33.84,
+        66
+      ]
+    },
+    {
+      "iso3": "ALB",
+      "name": "Albania",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2017-05-01",
+      "exitDate": null,
+      "labelPoint": [
+        41.14,
+        20.05
+      ]
+    },
+    {
+      "iso3": "DZA",
+      "name": "Algeria",
+      "region": "Middle East & North Africa",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2018-07-10",
+      "exitDate": null,
+      "labelPoint": [
+        28.16,
+        2.62
+      ]
+    },
+    {
+      "iso3": "AGO",
+      "name": "Angola",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        -12.33,
+        17.56
+      ]
+    },
+    {
+      "iso3": "ATG",
+      "name": "Antigua and Barbuda",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "High income",
+      "mouDate": "2018-06-01",
+      "exitDate": null,
+      "labelPoint": [
+        17.08,
+        -61.79
+      ]
+    },
+    {
+      "iso3": "ARG",
+      "name": "Argentina",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "High income",
+      "mouDate": "2022-02-06",
+      "exitDate": null,
+      "labelPoint": [
+        -35.18,
+        -65.16
+      ]
+    },
+    {
+      "iso3": "ARM",
+      "name": "Armenia",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2015-12-01",
+      "exitDate": null,
+      "labelPoint": [
+        40.29,
+        44.93
+      ]
+    },
+    {
+      "iso3": "AUT",
+      "name": "Austria",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "High income",
+      "mouDate": null,
+      "exitDate": null,
+      "labelPoint": [
+        47.59,
+        14.13
+      ]
+    },
+    {
+      "iso3": "AZE",
+      "name": "Azerbaijan",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2015-12-01",
+      "exitDate": null,
+      "labelPoint": [
+        40.34,
+        47.66
+      ]
+    },
+    {
+      "iso3": "BHR",
+      "name": "Bahrain",
+      "region": "Middle East & North Africa",
+      "incomeGroup": "High income",
+      "mouDate": "2018-07-01",
+      "exitDate": null,
+      "labelPoint": [
+        26.04,
+        50.54
+      ]
+    },
+    {
+      "iso3": "BGD",
+      "name": "Bangladesh",
+      "region": "South Asia",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2019-03-01",
+      "exitDate": null,
+      "labelPoint": [
+        23.9,
+        90.22
+      ]
+    },
+    {
+      "iso3": "BRB",
+      "name": "Barbados",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "High income",
+      "mouDate": "2019-02-01",
+      "exitDate": null,
+      "labelPoint": [
+        13.18,
+        -59.56
+      ]
+    },
+    {
+      "iso3": "BLR",
+      "name": "Belarus",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2013-12-01",
+      "exitDate": null,
+      "labelPoint": [
+        53.53,
+        28.03
+      ]
+    },
+    {
+      "iso3": "BEN",
+      "name": "Benin",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        9.64,
+        2.33
+      ]
+    },
+    {
+      "iso3": "BOL",
+      "name": "Bolivia",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2018-06-01",
+      "exitDate": null,
+      "labelPoint": [
+        -16.71,
+        -64.69
+      ]
+    },
+    {
+      "iso3": "BIH",
+      "name": "Bosnia and Herzegovina",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2017-05-01",
+      "exitDate": null,
+      "labelPoint": [
+        44.17,
+        17.77
+      ]
+    },
+    {
+      "iso3": "BWA",
+      "name": "Botswana",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2021-01-07",
+      "exitDate": null,
+      "labelPoint": [
+        -22.18,
+        23.8
+      ]
+    },
+    {
+      "iso3": "BRN",
+      "name": "Brunei Darussalam",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "High income",
+      "mouDate": "2018-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        4.49,
+        114.59
+      ]
+    },
+    {
+      "iso3": "BGR",
+      "name": "Bulgaria",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2015-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        42.77,
+        25.22
+      ]
+    },
+    {
+      "iso3": "BDI",
+      "name": "Burundi",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        -3.36,
+        29.88
+      ]
+    },
+    {
+      "iso3": "CPV",
+      "name": "Cabo Verde",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        15.08,
+        -23.64
+      ]
+    },
+    {
+      "iso3": "KHM",
+      "name": "Cambodia",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2013-12-01",
+      "exitDate": null,
+      "labelPoint": [
+        12.72,
+        104.91
+      ]
+    },
+    {
+      "iso3": "CMR",
+      "name": "Cameroon",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2015-08-01",
+      "exitDate": null,
+      "labelPoint": [
+        5.69,
+        12.74
+      ]
+    },
+    {
+      "iso3": "CAF",
+      "name": "Central African Republic",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2021-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        6.57,
+        20.47
+      ]
+    },
+    {
+      "iso3": "TCD",
+      "name": "Chad",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        15.33,
+        18.65
+      ]
+    },
+    {
+      "iso3": "CHL",
+      "name": "Chile",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "High income",
+      "mouDate": "2018-11-06",
+      "exitDate": null,
+      "labelPoint": [
+        -35.75,
+        -71.31
+      ]
+    },
+    {
+      "iso3": "CHN",
+      "name": "China",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2013-12-01",
+      "exitDate": null,
+      "labelPoint": [
+        36.62,
+        103.8
+      ]
+    },
+    {
+      "iso3": "COL",
+      "name": "Colombia",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2025-05-14",
+      "exitDate": null,
+      "labelPoint": [
+        3.91,
+        -73.08
+      ]
+    },
+    {
+      "iso3": "COM",
+      "name": "Comoros",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2015-12-01",
+      "exitDate": null,
+      "labelPoint": [
+        -11.65,
+        43.34
+      ]
+    },
+    {
+      "iso3": "COD",
+      "name": "Congo, Dem. Rep.",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2021-01-06",
+      "exitDate": null,
+      "labelPoint": [
+        -2.88,
+        23.64
+      ]
+    },
+    {
+      "iso3": "COG",
+      "name": "Congo, Rep.",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Lower middle income",
+      "mouDate": null,
+      "exitDate": null,
+      "labelPoint": [
+        -0.84,
+        15.22
+      ]
+    },
+    {
+      "iso3": "COK",
+      "name": "Cook Islands",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2018-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        -21.22,
+        -159.79
+      ]
+    },
+    {
+      "iso3": "CRI",
+      "name": "Costa Rica",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        9.98,
+        -84.19
+      ]
+    },
+    {
+      "iso3": "CIV",
+      "name": "Côte d'Ivoire",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2017-05-23",
+      "exitDate": null,
+      "labelPoint": [
+        7.63,
+        -5.57
+      ]
+    },
+    {
+      "iso3": "HRV",
+      "name": "Croatia",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "High income",
+      "mouDate": "2017-05-01",
+      "exitDate": null,
+      "labelPoint": [
+        45.16,
+        16.42
+      ]
+    },
+    {
+      "iso3": "CUB",
+      "name": "Cuba",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2019-06-20",
+      "exitDate": null,
+      "labelPoint": [
+        21.61,
+        -78.94
+      ]
+    },
+    {
+      "iso3": "CYP",
+      "name": "Cyprus",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "High income",
+      "mouDate": "2019-04-01",
+      "exitDate": null,
+      "labelPoint": [
+        34.92,
+        33.01
+      ]
+    },
+    {
+      "iso3": "CZE",
+      "name": "Czech Republic",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "High income",
+      "mouDate": "2015-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        49.73,
+        15.31
+      ]
+    },
+    {
+      "iso3": "DJI",
+      "name": "Djibouti",
+      "region": "Middle East & North Africa",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        11.75,
+        42.56
+      ]
+    },
+    {
+      "iso3": "DMA",
+      "name": "Dominica",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2018-07-13",
+      "exitDate": null,
+      "labelPoint": [
+        15.44,
+        -61.36
+      ]
+    },
+    {
+      "iso3": "DOM",
+      "name": "Dominican Republic",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2019-12-01",
+      "exitDate": null,
+      "labelPoint": [
+        18.89,
+        -70.51
+      ]
+    },
+    {
+      "iso3": "ECU",
+      "name": "Ecuador",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2018-12-01",
+      "exitDate": null,
+      "labelPoint": [
+        -1.45,
+        -78.39
+      ]
+    },
+    {
+      "iso3": "EGY",
+      "name": "Egypt",
+      "region": "Middle East & North Africa",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2016-01-01",
+      "exitDate": null,
+      "labelPoint": [
+        26.5,
+        29.86
+      ]
+    },
+    {
+      "iso3": "SLV",
+      "name": "El Salvador",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2018-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        13.74,
+        -88.87
+      ]
+    },
+    {
+      "iso3": "GNQ",
+      "name": "Equatorial Guinea",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2019-04-01",
+      "exitDate": null,
+      "labelPoint": [
+        1.57,
+        10.47
+      ]
+    },
+    {
+      "iso3": "ERI",
+      "name": "Eritrea",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2021-11-25",
+      "exitDate": null,
+      "labelPoint": [
+        15.36,
+        38.84
+      ]
+    },
+    {
+      "iso3": "EST",
+      "name": "Estonia",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "High income",
+      "mouDate": "2017-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        58.69,
+        25.83
+      ]
+    },
+    {
+      "iso3": "ETH",
+      "name": "Ethiopia",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        8.62,
+        39.6
+      ]
+    },
+    {
+      "iso3": "FJI",
+      "name": "Fiji",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2018-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        -16.52,
+        -29.17
+      ]
+    },
+    {
+      "iso3": "GAB",
+      "name": "Gabon",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        -0.59,
+        11.79
+      ]
+    },
+    {
+      "iso3": "GMB",
+      "name": "Gambia, The",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        13.45,
+        -15.4
+      ]
+    },
+    {
+      "iso3": "GEO",
+      "name": "Georgia",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2016-12-01",
+      "exitDate": null,
+      "labelPoint": [
+        42.17,
+        43.51
+      ]
+    },
+    {
+      "iso3": "GHA",
+      "name": "Ghana",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        7.95,
+        -1.22
+      ]
+    },
+    {
+      "iso3": "GRC",
+      "name": "Greece",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "High income",
+      "mouDate": "2018-08-01",
+      "exitDate": null,
+      "labelPoint": [
+        39.48,
+        22.58
+      ]
+    },
+    {
+      "iso3": "GRD",
+      "name": "Grenada",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        12.12,
+        -61.68
+      ]
+    },
+    {
+      "iso3": "GIN",
+      "name": "Guinea",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        10.44,
+        -10.94
+      ]
+    },
+    {
+      "iso3": "GNB",
+      "name": "Guinea-Bissau",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2021-11-24",
+      "exitDate": null,
+      "labelPoint": [
+        12.06,
+        -14.92
+      ]
+    },
+    {
+      "iso3": "GUY",
+      "name": "Guyana",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2018-07-01",
+      "exitDate": null,
+      "labelPoint": [
+        4.79,
+        -58.98
+      ]
+    },
+    {
+      "iso3": "HND",
+      "name": "Honduras",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2023-10-18",
+      "exitDate": null,
+      "labelPoint": [
+        14.82,
+        -86.62
+      ]
+    },
+    {
+      "iso3": "HUN",
+      "name": "Hungary",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "High income",
+      "mouDate": "2015-06-01",
+      "exitDate": null,
+      "labelPoint": [
+        47.16,
+        19.4
+      ]
+    },
+    {
+      "iso3": "IDN",
+      "name": "Indonesia",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2015-03-01",
+      "exitDate": null,
+      "labelPoint": [
+        -0.19,
+        114.01
+      ]
+    },
+    {
+      "iso3": "IRN",
+      "name": "Iran",
+      "region": "Middle East & North Africa",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2018-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        32.58,
+        54.27
+      ]
+    },
+    {
+      "iso3": "IRQ",
+      "name": "Iraq",
+      "region": "Middle East & North Africa",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2015-12-01",
+      "exitDate": null,
+      "labelPoint": [
+        33.04,
+        43.74
+      ]
+    },
+    {
+      "iso3": "ITA",
+      "name": "Italy",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "High income",
+      "mouDate": "2019-03-01",
+      "exitDate": "2023-12-06",
+      "labelPoint": [
+        43.53,
+        12.15
+      ]
+    },
+    {
+      "iso3": "JAM",
+      "name": "Jamaica",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2019-04-01",
+      "exitDate": null,
+      "labelPoint": [
+        18.16,
+        -77.31
+      ]
+    },
+    {
+      "iso3": "JOR",
+      "name": "Jordan",
+      "region": "Middle East & North Africa",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2023-12-02",
+      "exitDate": null,
+      "labelPoint": [
+        31.25,
+        36.77
+      ]
+    },
+    {
+      "iso3": "KAZ",
+      "name": "Kazakhstan",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2015-08-01",
+      "exitDate": null,
+      "labelPoint": [
+        48.16,
+        67.29
+      ]
+    },
+    {
+      "iso3": "KEN",
+      "name": "Kenya",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2017-06-01",
+      "exitDate": null,
+      "labelPoint": [
+        0.6,
+        37.8
+      ]
+    },
+    {
+      "iso3": "KIR",
+      "name": "Kiribati",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2020-01-01",
+      "exitDate": null,
+      "labelPoint": [
+        1.85,
+        -157.37
+      ]
+    },
+    {
+      "iso3": "KOR",
+      "name": "Korea, Rep.",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "High income",
+      "mouDate": "2018-05-01",
+      "exitDate": null,
+      "labelPoint": [
+        36.46,
+        127.87
+      ]
+    },
+    {
+      "iso3": "KWT",
+      "name": "Kuwait",
+      "region": "Middle East & North Africa",
+      "incomeGroup": "High income",
+      "mouDate": "2018-05-01",
+      "exitDate": null,
+      "labelPoint": [
+        29.32,
+        47.56
+      ]
+    },
+    {
+      "iso3": "KGZ",
+      "name": "Kyrgyz Republic",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2013-12-01",
+      "exitDate": null,
+      "labelPoint": [
+        41.46,
+        74.53
+      ]
+    },
+    {
+      "iso3": "LAO",
+      "name": "Lao PDR",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        18.5,
+        103.74
+      ]
+    },
+    {
+      "iso3": "LVA",
+      "name": "Latvia",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "High income",
+      "mouDate": "2016-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        56.85,
+        24.91
+      ]
+    },
+    {
+      "iso3": "LBN",
+      "name": "Lebanon",
+      "region": "Middle East & North Africa",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2017-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        33.92,
+        35.88
+      ]
+    },
+    {
+      "iso3": "LSO",
+      "name": "Lesotho",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2019-06-01",
+      "exitDate": null,
+      "labelPoint": [
+        -29.58,
+        28.23
+      ]
+    },
+    {
+      "iso3": "LBR",
+      "name": "Liberia",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2019-04-01",
+      "exitDate": null,
+      "labelPoint": [
+        6.45,
+        -9.32
+      ]
+    },
+    {
+      "iso3": "LBY",
+      "name": "Libya",
+      "region": "Middle East & North Africa",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2018-07-01",
+      "exitDate": null,
+      "labelPoint": [
+        27.03,
+        18.01
+      ]
+    },
+    {
+      "iso3": "LTU",
+      "name": "Lithuania",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "High income",
+      "mouDate": "2017-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        55.33,
+        23.89
+      ]
+    },
+    {
+      "iso3": "LUX",
+      "name": "Luxembourg",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "High income",
+      "mouDate": "2019-03-01",
+      "exitDate": null,
+      "labelPoint": [
+        49.77,
+        6.07
+      ]
+    },
+    {
+      "iso3": "MDG",
+      "name": "Madagascar",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2017-03-01",
+      "exitDate": null,
+      "labelPoint": [
+        -19.38,
+        46.7
+      ]
+    },
+    {
+      "iso3": "MWI",
+      "name": "Malawi",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2022-03-24",
+      "exitDate": null,
+      "labelPoint": [
+        -13.22,
+        34.29
+      ]
+    },
+    {
+      "iso3": "MYS",
+      "name": "Malaysia",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2017-05-01",
+      "exitDate": null,
+      "labelPoint": [
+        3.62,
+        114.72
+      ]
+    },
+    {
+      "iso3": "MDV",
+      "name": "Maldives",
+      "region": "South Asia",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2017-08-01",
+      "exitDate": null,
+      "labelPoint": [
+        4.2,
+        73.5
+      ]
+    },
+    {
+      "iso3": "MLI",
+      "name": "Mali",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2019-07-26",
+      "exitDate": null,
+      "labelPoint": [
+        17.35,
+        -3.54
+      ]
+    },
+    {
+      "iso3": "MLT",
+      "name": "Malta",
+      "region": "Middle East & North Africa",
+      "incomeGroup": "High income",
+      "mouDate": "2018-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        35.89,
+        14.44
+      ]
+    },
+    {
+      "iso3": "MRT",
+      "name": "Mauritania",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        20.26,
+        -10.35
+      ]
+    },
+    {
+      "iso3": "FSM",
+      "name": "Micronesia, Fed. Sts.",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2018-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        6.89,
+        158.23
+      ]
+    },
+    {
+      "iso3": "MDA",
+      "name": "Moldova",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2013-12-01",
+      "exitDate": null,
+      "labelPoint": [
+        47.19,
+        28.46
+      ]
+    },
+    {
+      "iso3": "MNG",
+      "name": "Mongolia",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2013-12-01",
+      "exitDate": null,
+      "labelPoint": [
+        46.83,
+        103.05
+      ]
+    },
+    {
+      "iso3": "MNE",
+      "name": "Montenegro",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2017-05-01",
+      "exitDate": null,
+      "labelPoint": [
+        42.79,
+        19.24
+      ]
+    },
+    {
+      "iso3": "MAR",
+      "name": "Morocco",
+      "region": "Middle East & North Africa",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2017-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        29.84,
+        -8.46
+      ]
+    },
+    {
+      "iso3": "MOZ",
+      "name": "Mozambique",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        -17.27,
+        35.53
+      ]
+    },
+    {
+      "iso3": "MMR",
+      "name": "Myanmar",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2016-08-01",
+      "exitDate": null,
+      "labelPoint": [
+        21.22,
+        96.49
+      ]
+    },
+    {
+      "iso3": "NAM",
+      "name": "Namibia",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        -22.13,
+        17.21
+      ]
+    },
+    {
+      "iso3": "NPL",
+      "name": "Nepal",
+      "region": "South Asia",
+      "incomeGroup": "Low income",
+      "mouDate": "2017-05-01",
+      "exitDate": null,
+      "labelPoint": [
+        28.25,
+        83.92
+      ]
+    },
+    {
+      "iso3": "NZL",
+      "name": "New Zealand",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "High income",
+      "mouDate": "2017-03-01",
+      "exitDate": null,
+      "labelPoint": [
+        -43.97,
+        170.53
+      ]
+    },
+    {
+      "iso3": "NIC",
+      "name": "Nicaragua",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2022-01-06",
+      "exitDate": null,
+      "labelPoint": [
+        12.85,
+        -85.03
+      ]
+    },
+    {
+      "iso3": "NER",
+      "name": "Niger",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": null,
+      "exitDate": null,
+      "labelPoint": [
+        17.42,
+        9.39
+      ]
+    },
+    {
+      "iso3": "NGA",
+      "name": "Nigeria",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        9.6,
+        8.09
+      ]
+    },
+    {
+      "iso3": "NIU",
+      "name": "Niue",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2018-07-01",
+      "exitDate": null,
+      "labelPoint": [
+        -19.05,
+        -169.87
+      ]
+    },
+    {
+      "iso3": "MKD",
+      "name": "North Macedonia",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2013-12-01",
+      "exitDate": null,
+      "labelPoint": [
+        41.6,
+        21.68
+      ]
+    },
+    {
+      "iso3": "OMN",
+      "name": "Oman",
+      "region": "Middle East & North Africa",
+      "incomeGroup": "High income",
+      "mouDate": "2018-05-01",
+      "exitDate": null,
+      "labelPoint": [
+        20.58,
+        56.09
+      ]
+    },
+    {
+      "iso3": "PAK",
+      "name": "Pakistan",
+      "region": "South Asia",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2013-12-01",
+      "exitDate": null,
+      "labelPoint": [
+        29.95,
+        69.34
+      ]
+    },
+    {
+      "iso3": "PAN",
+      "name": "Panama",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "High income",
+      "mouDate": "2017-06-01",
+      "exitDate": "2025-02-04",
+      "labelPoint": [
+        8.52,
+        -80.11
+      ]
+    },
+    {
+      "iso3": "PNG",
+      "name": "Papua New Guinea",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2016-07-01",
+      "exitDate": null,
+      "labelPoint": [
+        -6.61,
+        144.24
+      ]
+    },
+    {
+      "iso3": "PER",
+      "name": "Peru",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2019-05-01",
+      "exitDate": null,
+      "labelPoint": [
+        -9.15,
+        -74.38
+      ]
+    },
+    {
+      "iso3": "PHL",
+      "name": "Philippines",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2017-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        15.96,
+        121.42
+      ]
+    },
+    {
+      "iso3": "POL",
+      "name": "Poland",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "High income",
+      "mouDate": "2015-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        52.13,
+        19.39
+      ]
+    },
+    {
+      "iso3": "PRT",
+      "name": "Portugal",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "High income",
+      "mouDate": "2018-12-01",
+      "exitDate": null,
+      "labelPoint": [
+        39.68,
+        -7.98
+      ]
+    },
+    {
+      "iso3": "QAT",
+      "name": "Qatar",
+      "region": "Middle East & North Africa",
+      "incomeGroup": "High income",
+      "mouDate": "2019-01-01",
+      "exitDate": null,
+      "labelPoint": [
+        25.31,
+        51.18
+      ]
+    },
+    {
+      "iso3": "ROU",
+      "name": "Romania",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2015-06-01",
+      "exitDate": null,
+      "labelPoint": [
+        45.85,
+        24.97
+      ]
+    },
+    {
+      "iso3": "RUS",
+      "name": "Russian Federation",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "Upper middle income",
+      "mouDate": null,
+      "exitDate": null,
+      "labelPoint": [
+        56.38,
+        193.22
+      ]
+    },
+    {
+      "iso3": "RWA",
+      "name": "Rwanda",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2018-07-01",
+      "exitDate": null,
+      "labelPoint": [
+        -1.99,
+        29.92
+      ]
+    },
+    {
+      "iso3": "WSM",
+      "name": "Samoa",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2018-10-01",
+      "exitDate": null,
+      "labelPoint": [
+        -13.63,
+        -172.44
+      ]
+    },
+    {
+      "iso3": "SAU",
+      "name": "Saudi Arabia",
+      "region": "Middle East & North Africa",
+      "incomeGroup": "High income",
+      "mouDate": "2018-08-01",
+      "exitDate": null,
+      "labelPoint": [
+        24.12,
+        44.54
+      ]
+    },
+    {
+      "iso3": "SEN",
+      "name": "Senegal",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2018-07-01",
+      "exitDate": null,
+      "labelPoint": [
+        14.37,
+        -14.47
+      ]
+    },
+    {
+      "iso3": "SRB",
+      "name": "Serbia",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2015-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        44.22,
+        20.79
+      ]
+    },
+    {
+      "iso3": "SYC",
+      "name": "Seychelles",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "High income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        -4.66,
+        55.48
+      ]
+    },
+    {
+      "iso3": "SLE",
+      "name": "Sierra Leone",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2018-08-01",
+      "exitDate": null,
+      "labelPoint": [
+        8.57,
+        -11.79
+      ]
+    },
+    {
+      "iso3": "SGP",
+      "name": "Singapore",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "High income",
+      "mouDate": "2018-04-01",
+      "exitDate": null,
+      "labelPoint": [
+        1.36,
+        103.82
+      ]
+    },
+    {
+      "iso3": "SVK",
+      "name": "Slovak Republic",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "High income",
+      "mouDate": "2015-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        48.71,
+        19.48
+      ]
+    },
+    {
+      "iso3": "SVN",
+      "name": "Slovenia",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "High income",
+      "mouDate": "2017-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        46.12,
+        14.8
+      ]
+    },
+    {
+      "iso3": "SLB",
+      "name": "Solomon Islands",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2019-10-01",
+      "exitDate": null,
+      "labelPoint": [
+        -9.62,
+        160.17
+      ]
+    },
+    {
+      "iso3": "SOM",
+      "name": "Somalia",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2015-08-01",
+      "exitDate": null,
+      "labelPoint": [
+        4.75,
+        45.71
+      ]
+    },
+    {
+      "iso3": "ZAF",
+      "name": "South Africa",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2015-12-01",
+      "exitDate": null,
+      "labelPoint": [
+        -29.01,
+        25.16
+      ]
+    },
+    {
+      "iso3": "SSD",
+      "name": "South Sudan",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        7.31,
+        30.25
+      ]
+    },
+    {
+      "iso3": "LKA",
+      "name": "Sri Lanka",
+      "region": "South Asia",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2017-04-01",
+      "exitDate": null,
+      "labelPoint": [
+        7.61,
+        80.7
+      ]
+    },
+    {
+      "iso3": "SDN",
+      "name": "Sudan",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        15.99,
+        29.94
+      ]
+    },
+    {
+      "iso3": "SUR",
+      "name": "Suriname",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2018-07-01",
+      "exitDate": null,
+      "labelPoint": [
+        4.13,
+        -55.91
+      ]
+    },
+    {
+      "iso3": "SYR",
+      "name": "Syria",
+      "region": "Middle East & North Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2022-01-06",
+      "exitDate": null,
+      "labelPoint": [
+        35.03,
+        38.51
+      ]
+    },
+    {
+      "iso3": "TJK",
+      "name": "Tajikistan",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "Low income",
+      "mouDate": "2018-10-01",
+      "exitDate": null,
+      "labelPoint": [
+        38.53,
+        71.01
+      ]
+    },
+    {
+      "iso3": "TZA",
+      "name": "Tanzania",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        -6.28,
+        34.8
+      ]
+    },
+    {
+      "iso3": "THA",
+      "name": "Thailand",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2014-12-01",
+      "exitDate": null,
+      "labelPoint": [
+        15.13,
+        101.01
+      ]
+    },
+    {
+      "iso3": "TLS",
+      "name": "Timor-Leste",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2017-04-01",
+      "exitDate": null,
+      "labelPoint": [
+        -8.81,
+        125.92
+      ]
+    },
+    {
+      "iso3": "TGO",
+      "name": "Togo",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        8.53,
+        0.96
+      ]
+    },
+    {
+      "iso3": "TON",
+      "name": "Tonga",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2018-03-01",
+      "exitDate": null,
+      "labelPoint": [
+        -21.17,
+        -175.22
+      ]
+    },
+    {
+      "iso3": "TTO",
+      "name": "Trinidad and Tobago",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "High income",
+      "mouDate": "2018-05-01",
+      "exitDate": null,
+      "labelPoint": [
+        10.42,
+        -61.29
+      ]
+    },
+    {
+      "iso3": "TUN",
+      "name": "Tunisia",
+      "region": "Middle East & North Africa",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2018-07-01",
+      "exitDate": null,
+      "labelPoint": [
+        34.12,
+        9.55
+      ]
+    },
+    {
+      "iso3": "TUR",
+      "name": "Türkiye",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2015-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        38.99,
+        35.42
+      ]
+    },
+    {
+      "iso3": "TKM",
+      "name": "Turkmenistan",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2017-06-01",
+      "exitDate": null,
+      "labelPoint": [
+        39.12,
+        59.37
+      ]
+    },
+    {
+      "iso3": "UGA",
+      "name": "Uganda",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        1.27,
+        32.37
+      ]
+    },
+    {
+      "iso3": "UKR",
+      "name": "Ukraine",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2017-12-01",
+      "exitDate": null,
+      "labelPoint": [
+        49.16,
+        31.25
+      ]
+    },
+    {
+      "iso3": "ARE",
+      "name": "United Arab Emirates",
+      "region": "Middle East & North Africa",
+      "incomeGroup": "High income",
+      "mouDate": "2018-07-01",
+      "exitDate": null,
+      "labelPoint": [
+        23.9,
+        54.31
+      ]
+    },
+    {
+      "iso3": "URY",
+      "name": "Uruguay",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "High income",
+      "mouDate": "2018-02-01",
+      "exitDate": null,
+      "labelPoint": [
+        -32.8,
+        -56.02
+      ]
+    },
+    {
+      "iso3": "UZB",
+      "name": "Uzbekistan",
+      "region": "Europe & Central Asia",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2015-06-01",
+      "exitDate": null,
+      "labelPoint": [
+        41.76,
+        63.13
+      ]
+    },
+    {
+      "iso3": "VUT",
+      "name": "Vanuatu",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2018-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        -15.23,
+        166.85
+      ]
+    },
+    {
+      "iso3": "VEN",
+      "name": "Venezuela",
+      "region": "Latin America & Caribbean",
+      "incomeGroup": "Upper middle income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        7.12,
+        -66.19
+      ]
+    },
+    {
+      "iso3": "VNM",
+      "name": "Vietnam",
+      "region": "East Asia & Pacific",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2017-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        16.65,
+        106.3
+      ]
+    },
+    {
+      "iso3": "YEM",
+      "name": "Yemen",
+      "region": "Middle East & North Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2017-11-01",
+      "exitDate": null,
+      "labelPoint": [
+        15.94,
+        47.54
+      ]
+    },
+    {
+      "iso3": "ZMB",
+      "name": "Zambia",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Lower middle income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        -13.46,
+        27.77
+      ]
+    },
+    {
+      "iso3": "ZWE",
+      "name": "Zimbabwe",
+      "region": "Sub-Saharan Africa",
+      "incomeGroup": "Low income",
+      "mouDate": "2018-09-01",
+      "exitDate": null,
+      "labelPoint": [
+        -19,
+        29.85
+      ]
+    }
+  ]
+}

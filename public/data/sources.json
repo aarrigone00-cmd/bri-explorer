@@ -1,0 +1,61 @@
+{
+  "sources": [
+    {
+      "id": "gfdc-countries-2025",
+      "title": "Countries of the Belt and Road Initiative (May 2025 update)",
+      "publisher": "Nedopil, C. — Green Finance & Development Center, FISF Fudan University",
+      "url": "https://greenfdc.org/countries-of-the-belt-and-road-initiative-bri/",
+      "kind": "dataset",
+      "usedFor": "Participating countries, likely MoU signing dates, exits (Italy 2023, Panama 2025), regions and income groups.",
+      "license": "Cite as: Nedopil, Christoph (2025): \"Countries of the Belt and Road Initiative\"; Shanghai, Green Finance & Development Center, FISF Fudan University, www.greenfdc.org"
+    },
+    {
+      "id": "ndrc-vision-2015",
+      "title": "Vision and Actions on Jointly Building Silk Road Economic Belt and 21st-Century Maritime Silk Road",
+      "publisher": "National Development and Reform Commission, Ministry of Foreign Affairs and Ministry of Commerce of the PRC (March 2015)",
+      "url": "http://english.www.gov.cn/archive/publications/2015/03/30/content_281475080249035.htm",
+      "kind": "official",
+      "usedFor": "Directions of the land and maritime routes and the six international economic corridors. Map lines are schematic interpretations of these descriptions."
+    },
+    {
+      "id": "natural-earth",
+      "title": "Natural Earth 1:50m Admin 0 – Countries (via the world-atlas package)",
+      "publisher": "Natural Earth / Mike Bostock (world-atlas)",
+      "url": "https://www.naturalearthdata.com/",
+      "kind": "geodata",
+      "usedFor": "Country boundary shapes. Boundaries are illustrative and do not imply any position on disputed territories."
+    },
+    {
+      "id": "wikipedia",
+      "title": "Wikipedia articles on individual projects",
+      "publisher": "Wikipedia contributors",
+      "url": "https://en.wikipedia.org/",
+      "kind": "secondary",
+      "usedFor": "Project summaries (dates, lengths, capacities, contractors, reported costs). Each project links to its article; the articles cite the underlying news and official sources."
+    },
+    {
+      "id": "aiddata",
+      "title": "Global Chinese Development Finance Dataset",
+      "publisher": "AidData, William & Mary",
+      "url": "https://www.aiddata.org/",
+      "kind": "further-reading",
+      "usedFor": "Recommended for extending this dataset with project-level financing records."
+    },
+    {
+      "id": "bu-gdp",
+      "title": "Chinese Loans to Africa Database / China's Global Power Database",
+      "publisher": "Boston University Global Development Policy Center",
+      "url": "https://www.bu.edu/gdp/",
+      "kind": "further-reading",
+      "usedFor": "Recommended for cross-checking loan amounts and lenders."
+    },
+    {
+      "id": "aei-cgit",
+      "title": "China Global Investment Tracker",
+      "publisher": "American Enterprise Institute",
+      "url": "https://www.aei.org/china-global-investment-tracker/",
+      "kind": "further-reading",
+      "usedFor": "Recommended for cross-checking investment and construction contract values."
+    }
+  ]
+}
