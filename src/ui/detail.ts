@@ -1,7 +1,9 @@
 import { COST_BASIS_SHORT, PROJECT_TYPES, STATUS_LABELS } from '../config';
 import { formatUsd, formatUsdMillions, participationAt, projectStatusAt, projectVisibleAt, recordStatusAt, recordVisibleAt } from '../lib/analytics';
+import { isSaved, toggleSaved } from '../auth/profile';
+import { isSupabaseConfigured } from '../auth/supabase';
 import type { Store } from '../state/store';
-import type { Dataset, FinanceRecord, Project } from '../types';
+import type { Dataset, FinanceRecord, Project, SavedItem } from '../types';
 import { $, escapeHtml, safeUrl } from './dom';
 
 const fmtDate = (iso: string) =>
@@ -23,6 +25,40 @@ export function initDetailPanel(data: Dataset, store: Store): void {
   panel.querySelector('[data-close-detail]')!.addEventListener('click', () => store.set({ selection: null }));
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && store.get().selection) store.set({ selection: null });
+  });
+
+  // ---- Save to profile ----------------------------------------------------------
+  const savedItemFor = (): SavedItem | null => {
+    const sel = store.get().selection;
+    if (!sel) return null;
+    return sel.kind === 'country' ? { kind: 'country', id: sel.iso3 } : { kind: sel.kind, id: String(sel.id) };
+  };
+  function renderSaveButton() {
+    body.querySelector('.save-slot')?.remove();
+    const item = savedItemFor();
+    if (!item || !isSupabaseConfigured) return;
+    const { user, profile } = store.get();
+    const saved = isSaved(store, item);
+    const html = !user
+      ? `<button type="button" class="save-button" data-save-login>☆ Sign in to save</button>`
+      : `<button type="button" class="save-button${saved ? ' is-saved' : ''}" data-save-toggle aria-pressed="${saved}" ${profile ? '' : 'disabled'}>${saved ? '★ Saved' : '☆ Save'}</button>`;
+    body.querySelector('.badges')?.insertAdjacentHTML('afterbegin', `<span class="save-slot">${html}</span>`);
+  }
+  body.addEventListener('click', async (e) => {
+    const t = e.target as HTMLElement;
+    if (t.closest('[data-save-login]')) {
+      document.dispatchEvent(new CustomEvent('bri:open-login'));
+      return;
+    }
+    if (t.closest('[data-save-toggle]')) {
+      const item = savedItemFor();
+      if (!item) return;
+      try {
+        await toggleSaved(store, item);
+      } catch (err) {
+        body.querySelector('.save-slot')?.insertAdjacentHTML('beforeend', `<span class="save-error">Couldn't save: ${escapeHtml((err as Error).message)}</span>`);
+      }
+    }
   });
 
   body.addEventListener('click', (e) => {
@@ -251,12 +287,14 @@ export function initDetailPanel(data: Dataset, store: Store): void {
       if (!p) return;
       renderProject(p, year);
     }
+    renderSaveButton();
     panel.hidden = false;
     document.body.classList.add('has-detail');
     body.scrollTop = 0;
   }
 
   store.subscribe((s, prev) => {
+    if (s.selection && s.selection === prev.selection && (s.user !== prev.user || s.profile !== prev.profile)) renderSaveButton();
     if (s.selection !== prev.selection || (s.selection && s.year !== prev.year)) render();
   });
 }

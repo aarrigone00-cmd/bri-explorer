@@ -149,3 +149,21 @@ export type Selection =
   | null;
 
 export type ThemePreference = 'light' | 'dark' | 'system';
+
+/** A bookmarked map item stored in the user's profile. */
+export interface SavedItem {
+  kind: 'country' | 'project' | 'record';
+  id: string;
+}
+
+/** Row of public.profiles in Supabase (one per signed-in user, protected by RLS). */
+export interface Profile {
+  id: string;
+  display_name: string | null;
+  affiliation: string | null;
+  region_of_interest: string | null;
+  bio: string | null;
+  saved_items: SavedItem[];
+  created_at: string;
+  updated_at: string;
+}

@@ -57,15 +57,46 @@ async function mockAuth(page) {
     calls.push({ method: req.method(), path, query: u.search, body, apikey: req.headers()['apikey'] });
     const json = (status, data) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(data) });
     if (path === '/token' && u.searchParams.get('grant_type') === 'password') {
+      if (body.password === 'not-confirmed') return json(400, { code: 'email_not_confirmed', error_code: 'email_not_confirmed', msg: 'Email not confirmed' });
       return body.password === 'correct-horse'
         ? json(200, session)
         : json(400, { code: 'invalid_credentials', error_code: 'invalid_credentials', msg: 'Invalid login credentials' });
     }
     if (path === '/signup') return json(200, { ...user, email: body.email, email_confirmed_at: null, confirmation_sent_at: new Date().toISOString() });
     if (path === '/recover') return json(200, {});
+    if (path === '/resend') return json(200, {});
     if (path === '/logout') return route.fulfill({ status: 204 });
     if (path === '/user') return json(200, user);
     return json(404, { msg: 'not mocked' });
+  });
+
+  // PostgREST mock for public.profiles, enforcing "own row only" like RLS.
+  const profiles = new Map();
+  await page.route('**/rest/v1/profiles**', async (route) => {
+    const req = route.request();
+    const u = new globalThis.URL(req.url());
+    const body = req.postData() ? JSON.parse(req.postData()) : null;
+    const authed = (req.headers()['authorization'] ?? '').includes(jwt);
+    calls.push({ method: req.method(), path: '/rest/profiles', query: u.search, body, authed });
+    const wantsObject = (req.headers()['accept'] ?? '').includes('vnd.pgrst.object');
+    const send = (rows) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(wantsObject ? rows[0] ?? null : rows) });
+    if (!authed) return route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ message: 'JWT required' }) });
+    const id = (u.searchParams.get('id') ?? '').replace(/^eq\./, '') || body?.id;
+    if (id !== 'user-1') return send([]); // RLS: other users' rows are invisible
+    const now = new Date().toISOString();
+    if (req.method() === 'GET') return send(profiles.has(id) ? [profiles.get(id)] : []);
+    if (req.method() === 'POST') {
+      const row = { display_name: null, affiliation: null, region_of_interest: null, bio: null, saved_items: [], created_at: now, ...body, updated_at: now };
+      profiles.set(id, row);
+      return send([row]);
+    }
+    if (req.method() === 'PATCH') {
+      const row = { ...profiles.get(id), ...body, updated_at: now };
+      profiles.set(id, row);
+      return send([row]);
+    }
+    return route.fulfill({ status: 405 });
   });
   return calls;
 }
@@ -99,12 +130,74 @@ try {
     check(tokenCall?.apikey?.startsWith('sb_publishable_'), `[${tag}] requests use the publishable key`);
     await page.screenshot({ path: `${outDir}/${tag}-error.png` });
 
+    // Unconfirmed email → offer to resend the confirmation link
+    await page.fill('#auth-password', 'not-confirmed');
+    await page.click('#auth-submit');
+    await page.waitForSelector('[data-resend]');
+    await page.click('[data-resend]');
+    await page.waitForSelector('.auth__message--success');
+    const resend = calls.find((c) => c.path === '/resend');
+    check(resend?.body?.email === EMAIL && resend?.body?.type === 'signup', `[${tag}] unconfirmed email can resend the confirmation link`);
+
     // Correct password → signed in, email in header
     await page.fill('#auth-password', 'correct-horse');
     await page.click('#auth-submit');
     await page.waitForSelector('[data-sign-out]');
     check(!(await page.locator('#auth-dialog[open]').count()), `[${tag}] dialog closes after sign-in`);
-    check(vp.name === 'phone' || (await page.textContent('.account__email')) === EMAIL, `[${tag}] header shows signed-in email`);
+    await page.waitForSelector('[data-open-profile]');
+    check(true, `[${tag}] header shows profile button`);
+    await page.waitForFunction(() => window.bri?.store.get().profile !== null);
+    check(calls.some((c) => c.path === '/rest/profiles' && c.method === 'POST'), `[${tag}] missing profile row is created on first sign-in`);
+
+    // ---- Profile: edit and save ----
+    await page.click('[data-open-profile]');
+    await page.waitForSelector('#profile-dialog[open]');
+    check((await page.textContent('#profile-email')) === EMAIL, `[${tag}] profile shows account email`);
+    check((await page.inputValue('#profile-form [name="display_name"]')) === 'tester', `[${tag}] display name defaults from email`);
+    await page.fill('#profile-form [name="display_name"]', 'Ada Researcher');
+    await page.fill('#profile-form [name="affiliation"]', 'Example University');
+    await page.selectOption('#profile-form [name="region_of_interest"]', 'Sub-Saharan Africa');
+    await page.fill('#profile-form [name="bio"]', 'Studying rail finance.');
+    await page.click('#profile-submit');
+    await page.waitForSelector('#profile-message.auth__message--success');
+    const patch = calls.filter((c) => c.path === '/rest/profiles' && c.method === 'PATCH').at(-1);
+    check(
+      patch?.body?.display_name === 'Ada Researcher' && patch.body.affiliation === 'Example University' && patch.body.region_of_interest === 'Sub-Saharan Africa' && patch.body.bio === 'Studying rail finance.',
+      `[${tag}] profile fields saved to Supabase`,
+    );
+    check(patch?.query.includes('id=eq.user-1'), `[${tag}] update is scoped to the signed-in user`);
+    await page.waitForFunction(() => document.querySelector('.avatar')?.textContent === 'AR');
+    check(true, `[${tag}] header updates with new name initials`);
+    check((await page.textContent('#profile-saved')).includes('Nothing saved yet'), `[${tag}] empty saved list explained`);
+    await page.screenshot({ path: `${outDir}/${tag}-profile.png` });
+    await page.click('#profile-close');
+
+    // ---- Save a country and a project from the map panels ----
+    await page.evaluate(() => window.bri.store.set({ selection: { kind: 'country', iso3: 'KEN' } }));
+    await page.waitForSelector('[data-save-toggle]:not([disabled])');
+    await page.click('[data-save-toggle]');
+    await page.waitForSelector('[data-save-toggle][aria-pressed="true"]');
+    await page.evaluate(() => window.bri.store.set({ selection: { kind: 'project', id: 'mombasa-nairobi-sgr' } }));
+    await page.waitForSelector('[data-save-toggle][aria-pressed="false"]');
+    await page.click('[data-save-toggle]');
+    await page.waitForSelector('[data-save-toggle][aria-pressed="true"]');
+    const savedPatch = calls.filter((c) => c.method === 'PATCH' && c.body?.saved_items).at(-1);
+    check(savedPatch?.body.saved_items.length === 2, `[${tag}] saved items stored in profile (${JSON.stringify(savedPatch?.body.saved_items)})`);
+    await page.click('[data-close-detail]');
+    await page.click('[data-open-profile]');
+    await page.waitForSelector('#profile-saved [data-go-kind="country"]');
+    const savedText = await page.textContent('#profile-saved');
+    check(savedText.includes('Kenya') && savedText.includes('Mombasa'), `[${tag}] profile lists saved items`);
+    await page.screenshot({ path: `${outDir}/${tag}-profile-saved.png` });
+    await page.click('#profile-saved [data-go-kind="country"]');
+    await page.waitForFunction(() => document.querySelector('.detail__title')?.textContent === 'Kenya');
+    check(true, `[${tag}] clicking a saved item opens it on the map`);
+    await page.click('[data-close-detail]');
+    await page.click('[data-open-profile]');
+    await page.click('#profile-saved [data-unsave-kind="country"]');
+    await page.waitForFunction(() => document.querySelectorAll('#profile-saved [data-go-kind]').length === 1);
+    check(true, `[${tag}] saved item can be removed`);
+    await page.click('#profile-close');
     check(await page.evaluate(() => window.bri?.store.get().user?.email) === EMAIL, `[${tag}] user stored in app state`);
     await page.screenshot({ path: `${outDir}/${tag}-signed-in.png` });
 
@@ -116,6 +209,11 @@ try {
     // Sign out
     await page.click('[data-sign-out]');
     await page.waitForSelector('[data-sign-in]');
+    check(await page.evaluate(() => window.bri.store.get().profile === null), `[${tag}] profile cleared on sign-out`);
+    await page.evaluate(() => window.bri.store.set({ selection: { kind: 'country', iso3: 'KEN' } }));
+    await page.waitForSelector('[data-save-login]');
+    check(true, `[${tag}] signed-out panel offers "Sign in to save"`);
+    await page.evaluate(() => window.bri.store.set({ selection: null }));
     check(calls.some((c) => c.path === '/logout'), `[${tag}] sign out calls Supabase and resets header`);
 
     // Sign up → confirmation message, redirect back to this site

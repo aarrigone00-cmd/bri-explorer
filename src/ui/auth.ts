@@ -29,6 +29,11 @@ function friendlyError(err: AuthError | Error): string {
   return msg;
 }
 
+export function initials(name: string): string {
+  const parts = name.replace(/[^\p{L}\p{N}\s._-]/gu, '').split(/[\s._-]+/).filter(Boolean);
+  return ((parts[0]?.[0] ?? '?') + (parts[1]?.[0] ?? '')).toUpperCase();
+}
+
 export async function initAuth(store: Store): Promise<void> {
   const slot = $('#auth-slot');
   const dialog = $('#auth-dialog') as HTMLDialogElement;
@@ -100,6 +105,21 @@ export async function initAuth(store: Store): Promise<void> {
     }
   });
   $('#auth-close').addEventListener('click', () => dialog.close());
+  document.addEventListener('bri:open-login', () => open('sign-in'));
+  message.addEventListener('click', async (e) => {
+    if (!(e.target as HTMLElement).closest('[data-resend]')) return;
+    try {
+      const { error } = await sb.auth.resend({
+        type: 'signup',
+        email: email.value.trim(),
+        options: { emailRedirectTo: `${window.location.origin}${window.location.pathname}` },
+      });
+      if (error) throw error;
+      showMessage(`A new confirmation link is on its way to ${email.value.trim()}.`, 'success');
+    } catch (err) {
+      showMessage(friendlyError(err as Error), 'error');
+    }
+  });
   // Close when clicking the backdrop.
   dialog.addEventListener('click', (e) => {
     if (e.target === dialog) dialog.close();
@@ -115,6 +135,11 @@ export async function initAuth(store: Store): Promise<void> {
     try {
       if (mode === 'sign-in') {
         const { error } = await sb.auth.signInWithPassword({ email: email.value.trim(), password: password.value });
+        if (error && /email not confirmed/i.test(error.message)) {
+          showMessage('Please confirm your email first. Check your inbox for the confirmation link.', 'error');
+          message.insertAdjacentHTML('beforeend', ' <button type="button" class="inline-link" data-resend>Resend confirmation email</button>');
+          return;
+        }
         if (error) throw error;
         dialog.close();
       } else if (mode === 'sign-up') {
@@ -150,9 +175,14 @@ export async function initAuth(store: Store): Promise<void> {
 
   function renderSlot() {
     const user = store.get().user;
+    const profile = store.get().profile;
+    const name = profile?.display_name || user?.email.split('@')[0] || '';
     slot.innerHTML = user
       ? `<div class="account">
-           <span class="account__email" title="${escapeHtml(user.email)}">${escapeHtml(user.email)}</span>
+           <button type="button" class="account__profile" data-open-profile title="Your profile (${escapeHtml(user.email)})" aria-label="Open your profile">
+             <span class="avatar" aria-hidden="true">${escapeHtml(initials(name))}</span>
+             <span class="account__name">${escapeHtml(name)}</span>
+           </button>
            <button type="button" class="chip-button chip-button--small" data-sign-out>Sign out</button>
          </div>`
       : `<button type="button" class="chip-button chip-button--small" data-sign-in>Sign in</button>`;
@@ -160,13 +190,14 @@ export async function initAuth(store: Store): Promise<void> {
   slot.addEventListener('click', async (e) => {
     const t = e.target as HTMLElement;
     if (t.closest('[data-sign-in]')) open('sign-in');
+    if (t.closest('[data-open-profile]')) document.dispatchEvent(new CustomEvent('bri:open-profile'));
     if (t.closest('[data-sign-out]')) {
       const { error } = await sb.auth.signOut();
       if (error) console.error(error);
     }
   });
   store.subscribe((s, prev) => {
-    if (s.user !== prev.user) renderSlot();
+    if (s.user !== prev.user || s.profile?.display_name !== prev.profile?.display_name) renderSlot();
   });
 
   // Errors from expired or reused email links come back in the URL hash.
@@ -180,7 +211,11 @@ export async function initAuth(store: Store): Promise<void> {
 
   sb.auth.onAuthStateChange((event, session) => {
     const u = session?.user;
-    store.set({ user: u ? { id: u.id, email: u.email ?? '' } : null });
+    const current = store.get().user;
+    // Token refreshes fire this too; only update state when the user changes.
+    if (u?.id !== current?.id || (u && u.email !== current?.email)) {
+      store.set({ user: u ? { id: u.id, email: u.email ?? '', createdAt: u.created_at } : null, profile: null });
+    }
     if (event === 'PASSWORD_RECOVERY') {
       // Defer: this can fire during client initialisation.
       setTimeout(() => open('new-password'), 0);

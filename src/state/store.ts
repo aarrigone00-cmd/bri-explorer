@@ -1,4 +1,4 @@
-import type { LayerKey, Selection, ThemePreference } from '../types';
+import type { LayerKey, Profile, Selection, ThemePreference } from '../types';
 
 export interface AppState {
   layers: Record<LayerKey, boolean>;
@@ -10,7 +10,9 @@ export interface AppState {
   resolvedTheme: 'light' | 'dark';
   showLabels: boolean;
   /** Signed-in user (Supabase Auth), or null. */
-  user: { id: string; email: string } | null;
+  user: { id: string; email: string; createdAt?: string } | null;
+  /** The signed-in user's profile row, once loaded. */
+  profile: Profile | null;
 }
 
 type Listener = (state: AppState, prev: AppState) => void;

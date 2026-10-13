@@ -59,6 +59,22 @@ Login uses [Supabase Auth](https://supabase.com/docs/guides/auth) with email + p
 - `supabase-js` is loaded as a separate chunk so it doesn't slow the map's first load.
 - Code: `src/auth/supabase.ts` (client) and `src/ui/auth.ts` (header button + dialog). The signed-in user is available as `store.get().user` for future features, e.g. saved views protected by Row Level Security.
 
+### Profiles
+
+Signed-in users get a **profile** (click your name or initials in the header):
+
+- Editable display name, organization or school, region of interest and a short "about you" (500 characters)
+- **Saved on the map**: a ☆ Save button on every country, flagship project and AidData record panel. Saved items are listed in the profile, and clicking one opens it on the map
+- Email address and "member since" date from Supabase Auth
+
+Data lives in the `public.profiles` table (`supabase/migrations/20261013190102_create_profiles.sql`):
+
+- One row per user, created automatically by a trigger when someone signs up. The app also creates it if missing.
+- **Row Level Security**: users can only select, insert and update their own row. Anonymous visitors have no access, and rows are deleted with the user account.
+- Length limits and the saved-items format are enforced by database constraints, not just the form.
+
+Code: `src/auth/profile.ts` (data access) and `src/ui/profile.ts` (profile dialog). The detail panel adds the Save button.
+
 ### One-time Supabase dashboard settings
 
 These can't be changed through the database, so they're done in the dashboard (**Authentication → URL Configuration**):

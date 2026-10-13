@@ -10,6 +10,7 @@ import { initDetailPanel } from './ui/detail';
 import { $ } from './ui/dom';
 import { initFilters } from './ui/filters';
 import { initLegend } from './ui/legend';
+import { initProfile } from './ui/profile';
 import { initSearch } from './ui/search';
 import { initSources } from './ui/sources';
 import { initTimeline } from './ui/timeline';
@@ -37,6 +38,7 @@ async function main() {
     resolvedTheme: resolveTheme(theme),
     showLabels: true,
     user: null,
+    profile: null,
   });
   initTheme(store);
   void initAuth(store);
@@ -62,6 +64,7 @@ async function main() {
   initDetailPanel(data, store);
   initDashboard(data, store);
   initSources(data);
+  initProfile(data, store);
 
   // Fly to whatever gets selected (from the map, search or the detail panel).
   store.subscribe((s, prev) => {

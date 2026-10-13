@@ -144,6 +144,46 @@
       </form>
     </dialog>
 
+    <dialog id="profile-dialog" class="auth profile" aria-labelledby="profile-title">
+      <div class="auth__form">
+        <div class="auth__head">
+          <h2 id="profile-title">Your profile</h2>
+          <button id="profile-close" class="icon-button" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </div>
+        <div class="profile__identity">
+          <span id="profile-avatar" class="avatar avatar--large" aria-hidden="true"></span>
+          <div>
+            <div id="profile-email" class="profile__email"></div>
+            <div id="profile-since" class="muted small"></div>
+          </div>
+        </div>
+        <p id="profile-message" class="auth__message" role="status" hidden></p>
+        <form id="profile-form" class="profile__form">
+          <label class="field">
+            <span>Display name</span>
+            <input name="display_name" type="text" maxlength="60" autocomplete="nickname" />
+          </label>
+          <label class="field">
+            <span>Organization or school</span>
+            <input name="affiliation" type="text" maxlength="100" autocomplete="organization" />
+          </label>
+          <label class="field">
+            <span>Region of interest</span>
+            <select name="region_of_interest"></select>
+          </label>
+          <label class="field">
+            <span>About you <small id="profile-bio-count" class="muted"></small></span>
+            <textarea name="bio" rows="3" maxlength="500" placeholder="What are you researching or curious about?"></textarea>
+          </label>
+          <button id="profile-submit" class="button-primary" type="submit">Save profile</button>
+        </form>
+        <section aria-labelledby="profile-saved-title">
+          <h3 id="profile-saved-title" class="profile__subhead">Saved on the map <span id="profile-saved-count" class="muted"></span></h3>
+          <ul id="profile-saved" class="link-list profile__saved"></ul>
+        </section>
+      </div>
+    </dialog>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
