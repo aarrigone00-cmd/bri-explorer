@@ -1,4 +1,4 @@
-import type { CostBasis, LayerKey, ProjectStatus, ProjectType } from './types';
+import type { CostBasis, LayerKey, ProjectType } from './types';
 
 export const BRI_LAUNCH_YEAR = 2013;
 
@@ -19,15 +19,7 @@ export const PROJECT_TYPES: Record<ProjectType, { label: string; plural: string;
   other: { label: 'Other', plural: 'Industrial parks, urban & airports', glyph: glyphs.other },
 };
 
-export const STATUS_LABELS: Record<ProjectStatus, string> = {
-  operational: 'Operational',
-  completed: 'Completed',
-  'partially-operational': 'Partially operational',
-  'under-construction': 'Under construction',
-  planned: 'Planned / agreed',
-  suspended: 'Suspended',
-  cancelled: 'Cancelled',
-};
+export { STATUS_LABELS } from './labels';
 
 export const COST_BASIS_SHORT: Record<CostBasis, string> = {
   'total-cost': 'Total cost',
