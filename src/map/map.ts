@@ -21,6 +21,25 @@ const PANES = {
   records: 440,
 } as const;
 
+function ringArea(ring: number[][]): number {
+  let a = 0;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) a += ring[j][0] * ring[i][1] - ring[i][0] * ring[j][1];
+  return a / 2;
+}
+
+function ringCentroid(ring: number[][]): [number, number] {
+  let x = 0;
+  let y = 0;
+  let a = 0;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const f = ring[j][0] * ring[i][1] - ring[i][0] * ring[j][1];
+    x += (ring[j][0] + ring[i][0]) * f;
+    y += (ring[j][1] + ring[i][1]) * f;
+    a += f;
+  }
+  return a === 0 ? [ring[0][0], ring[0][1]] : [x / (3 * a), y / (3 * a)];
+}
+
 export function createMap(el: HTMLElement, data: Dataset, store: Store): MapController {
   const map = L.map(el, {
     center: [28, 70],
@@ -87,20 +106,69 @@ export function createMap(el: HTMLElement, data: Dataset, store: Store): MapCont
     }
   }
 
-  // ---- Detailed labels (optional tiles) --------------------------------------
-  let labels: L.TileLayer | null = null;
+  // ---- Place-name labels --------------------------------------------------------
+  // Drawn from the boundary data (no tile service, no key): each country's name
+  // at the centre of its largest polygon. Larger countries appear first; smaller
+  // ones as you zoom in. A tile service can be used instead via VITE_TILE_URL.
+  const countryLabels = data.world.features
+    .filter((f) => f.properties.iso3 && f.properties.iso3 !== '-99')
+    .map((f) => {
+      const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+      let best = polys[0][0];
+      let bestArea = -1;
+      for (const p of polys) {
+        const a = Math.abs(ringArea(p[0]));
+        if (a > bestArea) {
+          bestArea = a;
+          best = p[0];
+        }
+      }
+      const known = participationByIso.get(f.properties.iso3!)?.labelPoint;
+      const [lon, lat] = ringCentroid(best);
+      const point: LatLng = known ?? [lat, lon];
+      const name = participationByIso.get(f.properties.iso3!)?.name ?? f.properties.name;
+      return {
+        area: bestArea,
+        marker: L.marker(point, {
+          pane: 'labels',
+          interactive: false,
+          keyboard: false,
+          icon: L.divIcon({ className: 'country-label', html: `<span>${escapeHtml(name)}</span>`, iconSize: [0, 0] }),
+        }),
+      };
+    });
+  const labelGroup = L.layerGroup();
+  // Minimum polygon area (square degrees) for a label at each zoom level.
+  const minLabelArea = (z: number) => (z < 2.5 ? 120 : z < 3.5 ? 25 : z < 4.5 ? 4 : z < 5.5 ? 0.6 : 0);
+  function syncCountryLabels() {
+    if (!map.hasLayer(labelGroup)) return;
+    const min = minLabelArea(map.getZoom());
+    for (const l of countryLabels) {
+      const on = l.area >= min;
+      if (on && !labelGroup.hasLayer(l.marker)) labelGroup.addLayer(l.marker);
+      if (!on && labelGroup.hasLayer(l.marker)) labelGroup.removeLayer(l.marker);
+    }
+  }
+  map.on('zoomend', syncCountryLabels);
+
+  let labelTiles: L.TileLayer | null = null;
   function updateLabels(state: AppState) {
-    labels?.remove();
-    labels = null;
+    labelTiles?.remove();
+    labelTiles = null;
+    labelGroup.remove();
     if (!state.showLabels) return;
-    const url = TILE_URL.replace('{theme}', state.resolvedTheme === 'dark' ? 'dark' : 'light');
-    labels = L.tileLayer(url, {
-      pane: 'labels',
-      subdomains: 'abcd',
-      attribution: TILE_ATTRIBUTION,
-      maxZoom: 19,
-      opacity: 0.9,
-    }).addTo(map);
+    if (TILE_URL) {
+      labelTiles = L.tileLayer(TILE_URL.replace('{theme}', state.resolvedTheme === 'dark' ? 'dark' : 'light'), {
+        pane: 'labels',
+        subdomains: 'abcd',
+        attribution: TILE_ATTRIBUTION,
+        maxZoom: 19,
+        opacity: 0.9,
+      }).addTo(map);
+      return;
+    }
+    labelGroup.addTo(map);
+    syncCountryLabels();
   }
 
   // ---- Corridors ---------------------------------------------------------------

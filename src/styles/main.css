@@ -2092,3 +2092,21 @@ svg {
     display: none;
   }
 }
+
+/* Country names drawn by the map itself (no tile service). */
+.country-label {
+  pointer-events: none;
+}
+.country-label span {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  text-shadow:
+    0 0 3px var(--bg),
+    0 0 3px var(--bg),
+    0 0 6px var(--bg);
+}

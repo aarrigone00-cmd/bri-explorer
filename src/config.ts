@@ -49,11 +49,10 @@ export const LAYERS: LayerDef[] = [
 ];
 
 /**
- * Detailed basemap tiles (labels, coastlines, cities). CARTO basemaps need no
- * API key. Override with VITE_TILE_URL / VITE_TILE_ATTRIBUTION if desired.
+ * Place-name labels. By default the map draws country names itself from the
+ * Natural Earth boundaries, so no tile service or API key is needed. To use a
+ * tile service instead, set VITE_TILE_URL (a Leaflet URL template; {theme}
+ * becomes "light" or "dark") and VITE_TILE_ATTRIBUTION.
  */
-export const TILE_URL: string =
-  import.meta.env.VITE_TILE_URL || 'https://{s}.basemaps.cartocdn.com/{theme}_only_labels/{z}/{x}/{y}{r}.png';
-export const TILE_ATTRIBUTION: string =
-  import.meta.env.VITE_TILE_ATTRIBUTION ||
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+export const TILE_URL: string = import.meta.env.VITE_TILE_URL || '';
+export const TILE_ATTRIBUTION: string = import.meta.env.VITE_TILE_ATTRIBUTION || '';

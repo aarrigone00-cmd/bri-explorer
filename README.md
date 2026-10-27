@@ -46,7 +46,7 @@ Connect the repository in Netlify (**Add new site → Import an existing project
 
 ### Environment variables and secrets
 
-- The app has **no hard-coded keys**. The optional place-name labels use free CARTO basemap tiles, which need no key. Check CARTO's attribution and usage terms if you expect heavy traffic. You can turn labels off in the Layers panel or point them elsewhere with `VITE_TILE_URL` (see `.env.example`).
+- The app has **no hard-coded keys** and uses no map tile service: country names are drawn from the bundled Natural Earth boundaries. (CARTO's basemap tiles, used earlier, now require an API key.) To add a tile layer of your own, set `VITE_TILE_URL` and `VITE_TILE_ATTRIBUTION` (see `.env.example`); `{theme}` in the URL becomes `light` or `dark`.
 - Any variable prefixed `VITE_` is **embedded in the public bundle**, so never put secrets there.
 - For future features that need secrets (for example a paid news API), add a [Netlify Function](https://docs.netlify.com/functions/overview/) under `netlify/functions/`. Read the key from `process.env` in the function, set it in **Site settings → Environment variables**, and call the function from the frontend.
 
