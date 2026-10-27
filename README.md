@@ -48,7 +48,7 @@ Connect the repository in Netlify (**Add new site → Import an existing project
 
 - The app has **no hard-coded keys**. The optional place-name labels use free CARTO basemap tiles, which need no key. Check CARTO's attribution and usage terms if you expect heavy traffic. You can turn labels off in the Layers panel or point them elsewhere with `VITE_TILE_URL` (see `.env.example`).
 - Any variable prefixed `VITE_` is **embedded in the public bundle**, so never put secrets there.
-- For future features that need secrets (news APIs, AI providers), add a [Netlify Function](https://docs.netlify.com/functions/overview/) under `netlify/functions/`. Read the key from `process.env` in the function, set it in **Site settings → Environment variables**, and call the function from the frontend.
+- For future features that need secrets (for example a paid news API), add a [Netlify Function](https://docs.netlify.com/functions/overview/) under `netlify/functions/`. Read the key from `process.env` in the function, set it in **Site settings → Environment variables**, and call the function from the frontend.
 
 ## Email login (Supabase)
 
@@ -84,48 +84,44 @@ These can't be changed through the database, so they're done in the dashboard (*
 
 **Email delivery:** Supabase's built-in email sender only delivers to members of your Supabase organization's team, and only a few emails per hour. To let anyone sign up, add a custom SMTP provider (e.g. Resend, Postmark, SendGrid) under **Authentication → Emails → SMTP Settings**. Alternatively, turn off **Confirm email** under **Authentication → Sign In / Providers → Email** so sign-ups don't need an email; password reset still sends one.
 
-## AI agents
+## Agents (free, no AI, no API keys)
 
-Four agents built on the Claude API (`claude-opus-5-5` by default) run as **Netlify Functions**, so API keys stay on the server.
+Four agents add live features. None of them uses an AI service or a paid API: they run on rules over the site's own data and on free public sources, so they cost nothing to run.
 
-| Agent | Who uses it | What it does | Runs |
+| Agent | Who uses it | What it does | Where it runs |
 | --- | --- | --- | --- |
-| **Ask the Map** | Signed-in users (✦ button on the map) | Answers questions from the site's own data through tools (search, country profile, AidData queries, overview), cites the dataset, and can zoom the map, move the timeline or switch layers | On demand, max 30 per user per day |
-| **Project Watcher** | Admins (profile → "Project updates to review") | Searches recent news on each unfinished flagship project (plus 4 others in rotation) and files **suggested** status updates with sources. Nothing is published until an admin approves; approved updates appear on the project panel | Mondays 07:00 UTC, or "Run Project Watcher" |
-| **My Briefing** | Signed-in users (profile → "My briefing") | A one-page briefing from the user's region of interest, saved items, the site's data and the latest news digest | On demand, max 3 per day |
-| **China & the World** | Everyone (News section) | Researches the week's China foreign-policy news with web search and publishes a neutral, cited digest. Story links must come from the agent's own search results; invented links are dropped | Thursdays 06:00 UTC, or "Run the news agent now" (admins) |
+| **Ask the Map** | Everyone (✦ button on the map) | Recognises countries, projects, corridors, regions, sectors, lenders and years in a question, picks the matching kind of answer (country profile, project card, AidData ranking, comparison, membership count, year summary, GFDC trends), cites the datasets, and zooms the map, moves the timeline or turns on layers | In the browser (`src/agents/ask-engine.ts`); no sign-in, no limits |
+| **My Briefing** | Signed-in users (profile → "My briefing") | A one-page summary of the user's saved items and region of interest, with matching stories from the latest news digest and suggestions for what to explore next | In the browser (`src/agents/briefing.ts`) |
+| **China & the World** | Everyone (News section) | Reads the RSS feeds of BBC News, The Guardian, SCMP, The Diplomat, Al Jazeera, Dialogue Earth and CGTN (labelled as Chinese state media). Keeps the past week's China foreign-relations stories, tags topics, countries and Belt and Road relevance with keyword rules, merges duplicates, caps each outlet at 3 stories, and publishes up to 12. Summaries are the outlets' own descriptions | Netlify scheduled function, Thursdays 06:00 UTC; admins can also press "Collect this week's news now" |
+| **Project Watcher** | Admins (profile → "Project updates to review") | Searches the free [GDELT](https://www.gdeltproject.org/) news index for each flagship project's last two weeks of English coverage, one request every 5.5 s (GDELT's limit). Files a **suggested** update when a headline about the project uses status wording (opens, inaugurated, suspended, halted, cancelled, groundbreaking…) or when there are 3+ new articles. Nothing is published until an admin approves; approved updates appear on the project panel | Netlify background function, Mondays 07:00 UTC, or "Run Project Watcher" |
 
 ### Setup (Netlify → Site configuration → Environment variables)
 
 | Variable | Value | Secret? |
 | --- | --- | --- |
-| `ANTHROPIC_API_KEY` | From console.anthropic.com → API keys | Yes |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API keys → **secret** (or legacy `service_role`) key. Used only by the functions to save agent results and check sign-ins | Yes, never put it in a `VITE_` variable |
-| `AGENT_MODEL` (optional) | Model id, default `claude-opus-5-5`; e.g. `claude-sonnet-5-5` costs about half | No |
-| `AGENT_ASK_DAILY_LIMIT`, `AGENT_BRIEFING_DAILY_LIMIT` (optional) | Per-user daily limits (defaults 30 and 3) | No |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API keys → **secret** (or legacy `service_role`) key. Used only by the news and watcher functions to save results and check admin sign-ins | Yes, never put it in a `VITE_` variable |
 
-Redeploy after adding them. Until both secrets are set, the agents say they aren't switched on and the rest of the site works normally. `/api/agents/status` reports which keys are present (true/false only).
+Redeploy after adding it. Ask the Map and My Briefing work without it; the news collector and the Project Watcher do nothing until it is set.
 
-### Cost control
+### Limits and caveats
 
-- Set a **monthly spend limit** in the Anthropic Console.
-- The interactive agents need sign-in and have per-user daily limits (`agent_usage` table).
-- Rough running costs at Opus 5.5 prices: a few cents per question or briefing. The weekly news digest (up to 8 web searches per run) and the weekly Project Watcher (up to 3 searches per project) together typically cost on the order of US$5–12 a month. To cut that, switch `AGENT_MODEL`, or change the schedules in `netlify/functions/agent-*-schedule.mts`.
+- Rule-based answers can misread a question. Ask the Map falls back to a keyword search and to examples rather than guessing, and every answer cites its dataset.
+- Feeds change: if an outlet moves its RSS feed, that outlet is skipped (the run still publishes from the others) and the admin message says which ones failed. Edit `netlify/lib/news/feeds.ts` to change outlets.
+- GDELT sometimes refuses requests from shared cloud servers (HTTP 429). The watcher backs off, retries, stops early after 4 refusals in a row, and reports how many projects it could not reach. Add better search phrases for a project in `QUERY_OVERRIDES` in `netlify/lib/watch/detect.ts`.
+- Admin runs are limited per admin per day (`DAILY_LIMITS` in `netlify/lib/config.ts`) to stay polite to the free sources.
 
 ### How it fits together
 
-- `netlify/lib/` holds the shared code:
-  - `loop.ts`: the agent loop, with time and round budgets sized to Netlify's limits (60 s, or 15 min for background functions)
-  - `site-tools.ts`: the data tools
-  - `web.ts`: checks cited links against the agent's search results
-  - `agents/*.ts`: one file per agent
-- `netlify/functions/agent-*.mts` are the HTTP endpoints. The scheduled functions (30 s limit) only trigger the background functions that do the work.
-- Requests use the server-side refusal fallback (`fallbacks: "default"`) and prompt caching.
+- `src/agents/`: Ask the Map engine, briefing generator, and `client.ts` for the admin-only server calls.
+- `src/lib/text-match.ts`: country-name matching shared by the browser and the server (uses `public/data/country-names.json`).
+- `netlify/lib/news/`: feed list, RSS/Atom parser, digest rules and the run that saves to Supabase.
+- `netlify/lib/watch/`: GDELT client, the status-wording rules and the run.
+- `netlify/functions/agent-*.mts`: the endpoints (`/api/agents/news/run`, `/api/agents/watch/run`) and the two weekly schedules.
 - Supabase tables (`supabase/migrations/20261027170000_create_agents.sql`):
-  - `news_digests`, `project_update_suggestions`, `project_watch_log`, `user_briefings`, `agent_usage`, `agent_runs`, `app_admins`
-  - Row Level Security: anyone can read published digests and approved updates; users read their own briefings and usage; only admins see suggestions and run logs and can approve or reject. All writes go through the functions.
+  - `news_digests`, `project_update_suggestions`, `project_watch_log`, `agent_usage`, `agent_runs`, `app_admins`
+  - Row Level Security: anyone can read published digests and approved updates; only admins see suggestions and run logs and can approve or reject. All writes go through the functions.
 - **Admins** are listed in `app_admins`. Add one in the Supabase SQL editor: `insert into app_admins (user_id) select id from auth.users where email = '…';`
-- Tests: `npm run test:agents` runs all four agents against a scripted fake of the Claude API (no key or network needed); `npm run verify` covers the UI.
+- Tests: `npm run test:agents` covers the RSS parser, digest rules, watcher rules, Ask the Map, the briefing and the news endpoint with network calls mocked; `npm run verify` covers the UI.
 
 ## Data
 
@@ -211,6 +207,8 @@ netlify.toml            Netlify build + headers
 public/data/            all datasets (JSON)
 scripts/build-data.mjs  regenerates participation + boundary files
 scripts/verify.mjs      headless browser smoke test
+scripts/test-agents.ts  offline tests for the agents
+netlify/                functions for the news collector and Project Watcher
 src/
   main.ts               bootstraps store, data and feature modules
   config.ts             layer, type and status definitions, icons, tile config
@@ -218,6 +216,8 @@ src/
   data/loader.ts        loads every dataset into one Dataset object
   state/store.ts        tiny observable store (layers, year, selection, theme)
   lib/analytics.ts      pure stats and timeline functions (dashboard, map)
+  lib/text-match.ts     country-name matching (browser and server)
+  agents/               Ask the Map engine and briefing generator (run in the browser)
   map/map.ts            Leaflet map, layers and focus helpers
   auth/supabase.ts      lazily created Supabase client (email login)
   ui/                   auth dialog, detail panel, filters, search, timeline, legend, dashboard, sources, theme
@@ -230,7 +230,7 @@ Each feature is an `initX(data, store)` module that subscribes to the shared sto
 
 - **Country comparison**: add `compare: string[]` to `AppState`, a `ui/compare.ts` module, and use `computeStats`-style helpers in `lib/analytics.ts`.
 - **Additional datasets**: add the JSON to `public/data/`, load it in `data/loader.ts`, and extend `Dataset`.
-- **More agents**: add a file in `netlify/lib/agents/`, an endpoint in `netlify/functions/`, and a `ui/` module that calls it with `callAgent()` from `src/agents/client.ts` (see *AI agents*).
+- **More agents**: browser-only agents go in `src/agents/`; ones that need a server or a schedule get a module in `netlify/lib/` and an endpoint in `netlify/functions/` (see *Agents*).
 - **Advanced analytics**: add pure functions to `lib/analytics.ts` and render them in the dashboard.
 
 ## Neutrality and accuracy

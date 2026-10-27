@@ -1,6 +1,6 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { AgentError } from './anthropic';
+import { AgentError } from './errors';
 import { DAILY_LIMITS, SUPABASE_URL, supabaseServiceKey, type AgentName } from './config';
 
 let admin: SupabaseClient | null = null;

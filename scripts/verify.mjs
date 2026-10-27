@@ -56,10 +56,9 @@ try {
         if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push(m.text());
       });
       const tag = `${vp.name}-${scheme}`;
-      // The site's public Supabase reads (news digest, approved updates) and the
-      // agents status endpoint are stubbed: this sandbox has no network access.
+      // The site's public Supabase reads (news digest, approved updates) are
+      // stubbed: this sandbox has no network access.
       await page.route('**/rest/v1/**', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
-      await page.route('**/api/agents/status', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '{"ready":false}' }));
       await page.goto(URL, { waitUntil: 'domcontentloaded' });
       await page.waitForSelector('.leaflet-marker-icon .pm', { timeout: 15000 });
       await page.waitForTimeout(600);

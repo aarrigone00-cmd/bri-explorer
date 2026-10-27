@@ -1,21 +1,20 @@
-// Offline tests for the agent functions: real data tools, real agent loops,
-// with a scripted fake in place of the Claude API (no network, no API key).
+// Offline tests for the four free agents: RSS parsing and the news digest
+// rules, the Project Watcher's GDELT rules, the Ask the Map engine and the
+// briefing generator, plus the news endpoint end to end with fetch mocked
+// (no network, no keys).
 //
-//   npx tsx scripts/test-agents.ts
+//   npm run test:agents
 import assert from 'node:assert/strict';
-import type Anthropic from '@anthropic-ai/sdk';
-import type { MessagesClient } from '../netlify/lib/anthropic';
-import { runAsk, sanitizeHistory } from '../netlify/lib/agents/ask';
-import { runBriefing } from '../netlify/lib/agents/briefing';
-import { runNewsDigest } from '../netlify/lib/agents/news';
-import { checkProject, pickProjects } from '../netlify/lib/agents/watch';
-import { projectById } from '../netlify/lib/data';
-import { runToolLoop } from '../netlify/lib/loop';
-import { runDataTool, toMapAction } from '../netlify/lib/site-tools';
-import type { Profile } from '../src/types';
-
-type Msg = Anthropic.Beta.BetaMessage;
-type Params = Anthropic.Beta.MessageCreateParamsNonStreaming;
+import { buildDigest } from '../netlify/lib/news/digest';
+import { FEEDS, type Feed } from '../netlify/lib/news/feeds';
+import { parseFeed, toText } from '../netlify/lib/news/rss';
+import { detectStatus, distinctiveWords, findingFor, watchQuery, type Article } from '../netlify/lib/watch/detect';
+import { parseGdelt } from '../netlify/lib/watch/gdelt';
+import { createAskEngine } from '../src/agents/ask-engine';
+import { buildBriefing } from '../src/agents/briefing';
+import { createCountryMatcher } from '../src/lib/text-match';
+import countryNames from '../public/data/country-names.json' with { type: 'json' };
+import { loadDatasetFromDisk } from './lib/dataset';
 
 let passed = 0;
 async function test(name: string, fn: () => unknown | Promise<unknown>) {
@@ -29,292 +28,322 @@ async function test(name: string, fn: () => unknown | Promise<unknown>) {
   }
 }
 
-const usage = { input_tokens: 10, output_tokens: 10 } as Msg['usage'];
-function msg(stop: Msg['stop_reason'], content: unknown[]): Msg {
-  return { id: 'msg', type: 'message', role: 'assistant', model: 'claude-opus-5-5', content, stop_reason: stop, stop_sequence: null, usage } as unknown as Msg;
-}
-const text = (t: string) => ({ type: 'text', text: t, citations: null });
-const toolUse = (id: string, name: string, input: unknown) => ({ type: 'tool_use', id, name, input });
-const searchResults = (id: string, urls: string[]) => [
-  { type: 'server_tool_use', id, name: 'web_search', input: { query: 'q' } },
-  { type: 'web_search_tool_result', tool_use_id: id, content: urls.map((url, i) => ({ type: 'web_search_result', url, title: `Result ${i}`, page_age: null, encrypted_content: 'x' })) },
+const NOW = new Date('2026-10-27T12:00:00Z');
+const daysAgo = (n: number) => new Date(NOW.getTime() - n * 864e5).toUTCString();
+const rssItem = (title: string, desc: string, url: string, date: string) =>
+  `<item><title><![CDATA[${title}]]></title><description><![CDATA[${desc}]]></description><link>${url}</link><pubDate>${date}</pubDate></item>`;
+const rss = (...items: string[]) => `<?xml version="1.0"?><rss version="2.0"><channel><title>T</title>${items.join('')}</channel></rss>`;
+const feed = (id: string): Feed => FEEDS.find((f) => f.id === id)!;
+
+// ---- RSS ---------------------------------------------------------------------------------
+
+await test('RSS: CDATA, entities, encoded HTML and links are parsed', () => {
+  const items = parseFeed(
+    rss(
+      rssItem("China tells Israel to stop 'forced establishment'", 'Chinese Foreign Minister Wang Yi spoke &amp; more', 'https://www.bbc.co.uk/news/a?x=1&amp;y=2', daysAgo(1)),
+      `<item><title>Ports &amp; power: Beijing&#8217;s loans</title><description>&lt;p&gt;Lending &lt;b&gt;fell&lt;/b&gt; in 2025.&lt;/p&gt;</description><link>https://thediplomat.com/b</link><pubDate>${daysAgo(2)}</pubDate></item>`,
+      '<item><title>No link</title></item>',
+    ),
+  );
+  assert.equal(items.length, 2);
+  assert.equal(items[0].url, 'https://www.bbc.co.uk/news/a?x=1&y=2');
+  assert.equal(items[0].description, 'Chinese Foreign Minister Wang Yi spoke & more');
+  assert.equal(items[1].title, 'Ports & power: Beijing’s loans');
+  assert.equal(items[1].description, 'Lending fell in 2025.');
+  assert.ok(items[1].published.startsWith('2026-10-25'));
+});
+
+await test('RSS: Atom feeds use the alternate link', () => {
+  const items = parseFeed(
+    `<feed xmlns="http://www.w3.org/2005/Atom"><entry><title type="html">Xi meets Lula</title><link rel="self" href="https://x/self"/><link rel="alternate" href="https://x/story"/><summary>Talks on trade.</summary><updated>2026-10-26T10:00:00Z</updated></entry></feed>`,
+  );
+  assert.deepEqual(items, [{ title: 'Xi meets Lula', url: 'https://x/story', description: 'Talks on trade.', published: '2026-10-26T10:00:00.000Z' }]);
+});
+
+await test('RSS: scripts and tags never survive into text', () => {
+  assert.equal(toText('<![CDATA[<script>alert(1)</script><img src=x onerror=y>Hi]]>'), 'Hi');
+});
+
+// ---- Country matching ----------------------------------------------------------------------
+
+await test('Country matcher: longest names win, short codes are case-sensitive', () => {
+  const m = createCountryMatcher(countryNames as Record<string, string>);
+  assert.deepEqual(m.find('Nigeria and Niger sign deal'), ['NGA', 'NER']);
+  assert.deepEqual(m.find('Equatorial Guinea port'), ['GNQ']);
+  assert.deepEqual(m.find('US and UK warn China'), ['USA', 'GBR']);
+  assert.deepEqual(m.find('Let us talk about trade'), []);
+  assert.deepEqual(m.find('Beijing hosts Côte d’Ivoire and the DRC'), ['CIV', 'COD']);
+  assert.deepEqual(m.find('China and Chinese firms'), []);
+});
+
+// ---- News digest ---------------------------------------------------------------------------
+
+const results = [
+  {
+    feed: feed('bbc'),
+    items: parseFeed(
+      rss(
+        rssItem("China tells Israel to stop 'forced establishment' of West Bank settlements", 'Chinese Foreign Minister Wang Yi spoke to Israeli President Isaac Herzog.', 'https://bbc/1', daysAgo(1)),
+        rssItem('No order, no seat: Starbucks China rolls out new store policy', 'Starbucks says it is improving customers in-store experience.', 'https://bbc/2', daysAgo(2)),
+        rssItem("China's big political meeting could see Xi 'tighten discipline'", 'The secretive Plenum starts Monday in Beijing.', 'https://bbc/3', daysAgo(1)),
+        rssItem('Trump-Xi summit: what was not said', 'The two leaders met in Washington.', 'https://bbc/old', daysAgo(20)),
+      ),
+    ),
+  },
+  {
+    feed: feed('diplomat'),
+    items: parseFeed(
+      rss(
+        rssItem('Kenya seeks Chinese loan to extend standard gauge railway', 'Nairobi is negotiating new Belt and Road financing.', 'https://dip/1', daysAgo(3)),
+        rssItem('Japan elects a new prime minister', 'Domestic politics in Tokyo.', 'https://dip/2', daysAgo(1)),
+        rssItem('China and Philippines clash near Second Thomas Shoal', 'Coast guard vessels collided in the South China Sea.', 'https://dip/3', daysAgo(2)),
+      ),
+    ),
+  },
+  {
+    feed: feed('cgtn'),
+    items: parseFeed(rss(rssItem('China urges Israel to stop forced establishment of West Bank settlements', 'Wang Yi said in talks.', 'https://cgtn/1', daysAgo(1)))),
+  },
 ];
 
-/** Fake client that replays scripted responses and records each request. */
-function fake(script: (Msg | ((p: Params) => Msg))[]): MessagesClient & { calls: Params[] } {
-  const calls: Params[] = [];
-  return {
-    calls,
-    async create(params) {
-      calls.push(structuredClone(params));
-      const next = script.shift();
-      if (!next) throw new Error('Fake client ran out of scripted responses');
-      return typeof next === 'function' ? next(params) : next;
-    },
-  };
-}
-const lastToolResults = (p: Params) => {
-  const last = p.messages[p.messages.length - 1];
-  return (Array.isArray(last.content) ? last.content : []) as Anthropic.Beta.BetaToolResultBlockParam[];
-};
-
-// ---- Data tools ----------------------------------------------------------------------
-
-await test('search_site finds countries, flagship projects and AidData records', () => {
-  const r = runDataTool('search_site', { query: 'kenya' }) as { countries: { iso3: string }[]; flagship_projects: { id: string }[]; aiddata_records: unknown[] };
-  assert.equal(r.countries[0].iso3, 'KEN');
-  assert.ok(r.flagship_projects.some((p) => p.id === 'mombasa-nairobi-sgr'));
-  assert.ok(r.aiddata_records.length > 0);
+await test('Digest: keeps foreign-policy stories from the past week only', () => {
+  const d = buildDigest(results, NOW);
+  const heads = d.items.map((i) => i.headline);
+  assert.ok(heads.some((h) => h.startsWith('China tells Israel')));
+  assert.ok(heads.some((h) => h.startsWith('Kenya seeks')));
+  assert.ok(heads.some((h) => h.startsWith('China and Philippines')));
+  assert.ok(!heads.some((h) => /Starbucks|Plenum|political meeting|Trump-Xi|Japan elects/.test(h)), heads.join(' | '));
 });
 
-await test('get_country returns BRI status, projects, corridors and AidData totals', () => {
-  const r = runDataTool('get_country', { iso3: 'pak' }) as Record<string, any>;
-  assert.equal(r.name, 'Pakistan');
-  assert.match(r.bri_status, /BRI participant/);
-  assert.ok(r.economic_corridors.some((c: string) => c.includes('CPEC')));
-  assert.ok(r.flagship_projects.length >= 5);
-  assert.ok(r.aiddata_2013_2021.records > 0 && r.aiddata_2013_2021.total_committed_usd_bn_2021 > 0);
-  assert.equal((runDataTool('get_country', { iso3: 'XYZ' }) as { error?: string }).error?.includes('No data'), true);
+await test('Digest: same story from two outlets is merged, state media labelled', () => {
+  const d = buildDigest(results, NOW);
+  const israel = d.items.find((i) => i.headline.startsWith('China tells Israel'))!;
+  assert.deepEqual(
+    israel.sources.map((s) => s.publisher),
+    ['BBC News', 'CGTN (Chinese state media)'],
+  );
+  assert.deepEqual(israel.countries, ['ISR', 'PSE']);
+  assert.equal(israel.topic, 'Diplomacy');
 });
 
-await test('query_aiddata filters and groups (rail loans in Sub-Saharan Africa by country)', () => {
-  const r = runDataTool('query_aiddata', { region: 'Sub-Saharan Africa', type: 'rail', group_by: 'country', limit: 5 }) as Record<string, any>;
-  assert.ok(r.matched_records > 0);
-  assert.ok(r.groups.length > 0 && r.groups.length <= 5);
-  for (let i = 1; i < r.groups.length; i++) assert.ok(r.groups[i - 1].committed_usd_bn_2021 >= r.groups[i].committed_usd_bn_2021);
-  assert.ok(r.largest_records.every((x: { type: string }) => x.type === 'rail'));
+await test('Digest: Belt and Road stories are flagged and tagged', () => {
+  const d = buildDigest(results, NOW);
+  const kenya = d.items.find((i) => i.headline.startsWith('Kenya'))!;
+  assert.equal(kenya.bri_related, true);
+  assert.equal(kenya.topic, 'Belt and Road & development finance');
+  assert.deepEqual(kenya.countries, ['KEN']);
+  const shoal = d.items.find((i) => i.headline.startsWith('China and Philippines'))!;
+  assert.equal(shoal.topic, 'Security');
+  assert.equal(shoal.bri_related, false);
 });
 
-await test('get_overview reports totals from the data files', () => {
-  const r = runDataTool('get_overview', {}) as Record<string, any>;
-  assert.equal(r.bri_participants.count_with_dated_mou_incl_china, 146);
-  assert.equal(r.aiddata.records, 1297);
-  assert.equal(r.economic_corridors.length, 6);
-  assert.equal(r.latest_engagement.periods[0].total, 213.5);
+await test('Digest: overview is factual and within the database limit', () => {
+  const d = buildDigest(results, NOW);
+  assert.match(d.overview, /^3 stories on China's foreign relations from 3 outlets over the past week\./);
+  assert.match(d.overview, /1 story mentions the Belt and Road/);
+  assert.ok(d.overview.length <= 1000);
 });
 
-await test('update_map actions are validated', () => {
-  assert.deepEqual(toMapAction({ action: 'focus_country', iso3: 'ken' }), { action: 'focus_country', iso3: 'KEN' });
-  assert.ok('error' in toMapAction({ action: 'focus_project', project_id: 'nope' }));
-  assert.ok('error' in toMapAction({ action: 'set_year', year: 1999 }));
-  assert.deepEqual(toMapAction({ action: 'show_layers', layers: ['rail', 'bogus', 'aiddata'] }), { action: 'show_layers', layers: ['rail', 'aiddata'] });
+await test('Digest: at most 3 stories per outlet and 12 in all', () => {
+  const many = Array.from({ length: 20 }, (_, i) => rssItem(`China and ${['Brazil', 'Kenya', 'Peru', 'Chile', 'Egypt'][i % 5]} sign trade deal number ${i} on soybeans ${'x'.repeat(i)}`, '', `https://g/${i}`, daysAgo(1)));
+  const d = buildDigest(
+    FEEDS.map((f, k) => ({ feed: f, items: parseFeed(rss(...many.map((m) => m.replace(/https:\/\/g\//, `https://${f.id}/`).replace(/number (\d+)/, `number $1 ${'abcdefghijklmnop'.slice(k, k + 3)}${k}`)))) })),
+    NOW,
+  );
+  assert.ok(d.items.length <= 12);
+  const per = new Map<string, number>();
+  for (const i of d.items) per.set(i.sources[0].publisher, (per.get(i.sources[0].publisher) ?? 0) + 1);
+  assert.ok([...per.values()].every((n) => n <= 3), JSON.stringify([...per]));
 });
 
-// ---- Loop ------------------------------------------------------------------------------
+// ---- Project Watcher ------------------------------------------------------------------------
 
-await test('loop resumes pause_turn and sends every request with model, fallback and caching', async () => {
-  const client = fake([msg('pause_turn', [text('…')]), msg('end_turn', [text('done')])]);
-  const r = await runToolLoop(client, { system: 's', messages: [{ role: 'user', content: 'hi' }], tools: [], effort: 'low', runTool: () => ({}) });
-  assert.equal(r.rounds, 2);
-  assert.equal(client.calls.length, 2);
-  for (const c of client.calls) {
-    assert.equal(c.model, 'claude-opus-5-5');
-    assert.deepEqual(c.betas, ['server-side-fallback-2026-07-01']);
-    assert.equal(c.fallbacks, 'default');
-    assert.deepEqual(c.cache_control, { type: 'ephemeral' });
-    assert.equal(c.output_config?.effort, 'low');
-  }
+const data = loadDatasetFromDisk();
+const project = (id: string) => data.projects.find((p) => p.id === id)!;
+const art = (title: string, i = 0): Article => ({ url: `https://news.example/${i}`, title, domain: 'news.example', date: '2026-10-20' });
+
+await test('Watcher: search phrases come from project names (or overrides)', () => {
+  assert.equal(watchQuery(project('gwadar-port')), '"Gwadar Port"');
+  assert.equal(watchQuery(project('laos-china-railway')), '"Laos China Railway"');
+  assert.equal(watchQuery(project('peljesac-bridge')), '"Peljesac Bridge"');
+  assert.equal(watchQuery(project('jakarta-bandung-hsr')), '("Jakarta Bandung" OR Whoosh) "high speed"');
+  for (const p of data.projects) assert.ok(/"/.test(watchQuery(p)) || watchQuery(p).split(' ').length > 1, p.id);
+  assert.ok(distinctiveWords(project('east-coast-rail-link')).includes('ecrl'));
 });
 
-await test('loop wraps up with tools disabled when the round budget runs out', async () => {
-  const client = fake([msg('tool_use', [toolUse('t1', 'get_overview', {})]), msg('end_turn', [text('summary')])]);
-  const r = await runToolLoop(client, { system: 's', messages: [{ role: 'user', content: 'hi' }], tools: [], effort: 'low', maxRounds: 1, runTool: () => ({ ok: 1 }) });
-  assert.equal(r.truncated, true);
-  assert.deepEqual(client.calls[1].tool_choice, { type: 'none' });
+await test('Watcher: status wording in a headline about the project is detected', () => {
+  const ecrl = project('east-coast-rail-link'); // under construction
+  assert.equal(detectStatus(ecrl, [art('Malaysia’s ECRL officially opens to passengers')])?.status, 'operational');
+  assert.equal(detectStatus(ecrl, [art('East Coast Rail Link works halted after dispute')])?.status, 'suspended');
+  assert.equal(detectStatus(ecrl, [art('Malaysia cancels East Coast Rail Link contract')])?.status, 'cancelled');
+  // Status words about something else, or without the project, don't count.
+  assert.equal(detectStatus(ecrl, [art('Thai railway officially opens')]), null);
+  assert.equal(detectStatus(ecrl, [art('ECRL ridership forecasts revised')]), null);
+  // No backwards moves: a planned project isn't "suspended" by an opening story, an operational one doesn't "open".
+  assert.equal(detectStatus(project('laos-china-railway'), [art('Laos China railway opens to new freight route')]), null);
+  assert.equal(detectStatus(project('kyaukphyu-deep-sea-port'), [art('Groundbreaking held at Kyaukphyu deep sea port')])?.status, 'under-construction');
 });
 
-await test('loop surfaces refusals as a clear error', async () => {
-  const client = fake([msg('refusal', [])]);
-  await assert.rejects(runToolLoop(client, { system: 's', messages: [{ role: 'user', content: 'x' }], tools: [], effort: 'low', runTool: () => ({}) }), /declined/);
+await test('Watcher: findings need a status signal or notable coverage, and cite sources', () => {
+  const ecrl = project('east-coast-rail-link');
+  assert.equal(findingFor(ecrl, [], '2026-10-27'), null);
+  assert.equal(findingFor(ecrl, [art('ECRL progress update')], '2026-10-27'), null);
+  const f = findingFor(ecrl, [art('ECRL progress update', 1), art('ECRL officially opens to passengers', 2)], '2026-10-27')!;
+  assert.equal(f.suggested_status, 'operational');
+  assert.equal(f.sources[0].url, 'https://news.example/2');
+  assert.match(f.status_note, /Headline suggests "Operational"/);
+  const coverage = findingFor(ecrl, [1, 2, 3, 4, 5, 6].map((i) => art(`ECRL story ${i}`, i)), '2026-10-27')!;
+  assert.equal(coverage.suggested_status, 'under-construction');
+  assert.equal(coverage.sources.length, 4);
+  assert.ok(coverage.summary.length <= 1000 && coverage.status_note.length <= 500);
 });
 
-// ---- Agent 1: Ask the Map ----------------------------------------------------------------
-
-await test('Ask the Map: runs data tools, collects map actions and returns the answer', async () => {
-  const client = fake([
-    msg('tool_use', [
-      toolUse('t1', 'query_aiddata', { type: 'rail', group_by: 'country', limit: 3 }),
-      toolUse('t2', 'update_map', { action: 'show_layers', layers: ['rail', 'aiddata'] }),
-      toolUse('t3', 'update_map', { action: 'focus_country', iso3: 'XXX' }),
-    ]),
-    (p) => {
-      const results = lastToolResults(p);
-      assert.equal(results.length, 3, 'all tool results in one message');
-      assert.ok(String(results[0].content).includes('committed_usd_bn_2021'));
-      assert.equal(results[2].is_error, true, 'invalid map action reported to the model');
-      return msg('end_turn', [text('**Laos** received the most (AidData GCDF v3).')]);
-    },
-  ]);
-  const r = await runAsk(client, [{ role: 'user', content: 'Who got the most rail loans?' }]);
-  assert.match(r.reply, /Laos/);
-  assert.deepEqual(r.actions, [{ action: 'show_layers', layers: ['rail', 'aiddata'] }]);
-  const tools = (client.calls[0].tools ?? []).map((t) => ('name' in t ? t.name : ''));
-  assert.deepEqual(tools, ['search_site', 'get_country', 'get_project', 'query_aiddata', 'get_overview', 'update_map']);
+await test('Watcher: GDELT responses are parsed and de-duplicated', () => {
+  const a = parseGdelt(
+    JSON.stringify({
+      articles: [
+        { url: 'https://a/1', title: 'ECRL  update', seendate: '20261020T101500Z', domain: 'a', language: 'English' },
+        { url: 'https://a/1', title: 'dup', seendate: '20261020T101500Z', domain: 'a' },
+        { url: 'javascript:alert(1)', title: 'bad', seendate: '20261020T101500Z' },
+      ],
+    }),
+  );
+  assert.deepEqual(a, [{ url: 'https://a/1', title: 'ECRL update', domain: 'a', date: '2026-10-20' }]);
+  assert.deepEqual(parseGdelt('{}'), []);
+  assert.throws(() => parseGdelt('Please limit requests to one every 5 seconds'), /GDELT: Please limit/);
 });
 
-await test('Ask the Map: history is trimmed and must end with a user question', () => {
-  const long = Array.from({ length: 30 }, (_, i) => ({ role: i % 2 ? 'assistant' : 'user', content: `m${i}` }));
-  long.push({ role: 'user', content: 'last' });
-  const h = sanitizeHistory(long);
-  assert.ok(h.length <= 12 && h[0].role === 'user' && h[h.length - 1].content === 'last');
-  assert.throws(() => sanitizeHistory([{ role: 'assistant', content: 'hi' }]), /type a question/);
-  assert.throws(() => sanitizeHistory('nope'), /array/);
+// ---- Ask the Map ----------------------------------------------------------------------------
+
+const engine = createAskEngine(data);
+const ask = (q: string, ctx?: Parameters<typeof engine.answer>[1]) => engine.answer(q, ctx);
+
+await test('Ask: countries, projects and corridors move the map', () => {
+  assert.deepEqual(ask('Tell me about Kenya').actions[0], { action: 'focus_country', iso3: 'KEN' });
+  assert.deepEqual(ask('Laos').actions[0], { action: 'focus_country', iso3: 'LAO' });
+  assert.deepEqual(ask('Laos railway').actions[0], { action: 'focus_project', id: 'laos-china-railway' });
+  assert.deepEqual(ask('Hambantota port').actions[0], { action: 'focus_project', id: 'hambantota-port' });
+  assert.deepEqual(ask('Whoosh').actions[0], { action: 'focus_project', id: 'jakarta-bandung-hsr' });
+  assert.deepEqual(ask('What is CPEC?').actions, [{ action: 'add_layers', layers: ['corridors'] }]);
 });
 
-// ---- Agent 4: China & the World ------------------------------------------------------------
-
-const goodUrls = ['https://www.reuters.com/world/china/a', 'https://apnews.com/article/b', 'https://www.fmprc.gov.cn/eng/c'];
-const item = (urls: string[], extra: Record<string, unknown> = {}) => ({
-  headline: 'H',
-  date: '2026-10-20',
-  summary: 'S',
-  why_it_matters: 'W',
-  perspectives: '',
-  topic: 'Diplomacy',
-  countries: ['KEN', 'zzz'],
-  bri_related: true,
-  sources: urls.map((url) => ({ url, title: 't', publisher: 'p' })),
-  ...extra,
+await test('Ask: rankings come from AidData and cite it', () => {
+  const r = ask('Which countries received the most Chinese loans for railways?');
+  assert.match(r.reply, /^Countries receiving the most Chinese official finance in the AidData records \(railways & metros\)/);
+  assert.match(r.reply, /1\. \*\*Kenya\*\*/);
+  assert.match(r.reply, /\[Global Chinese Development Finance Dataset\]\(https:/);
+  const banks = ask('Which banks lent the most in Africa since 2015?');
+  assert.match(banks.reply, /Largest Chinese lenders .*in Sub-Saharan Africa, since 2015/);
+  assert.match(banks.reply, /1\. \*\*Export-Import Bank of China/);
 });
 
-await test('News digest: keeps only sources seen in web search and drops invented links', async () => {
-  const client = fake([
-    msg('tool_use', [
-      ...searchResults('s1', goodUrls),
-      toolUse('p1', 'publish_digest', {
-        overview: 'O',
-        items: [item([goodUrls[0], 'https://invented.example/x']), item([`${goodUrls[1]}?utm_source=x`]), item([goodUrls[2]]), item(['https://made-up.example/y'])],
-      }),
-    ]),
-    msg('end_turn', [text('Published.')]),
-  ]);
-  const d = await runNewsDigest(client, '2026-10-27');
-  assert.equal(d.items.length, 3, 'item with only invented sources is dropped');
-  assert.deepEqual(d.items[0].sources.map((s) => s.url), [goodUrls[0]]);
-  assert.equal(d.items[1].sources.length, 1, 'tracking parameters are ignored when matching');
-  assert.equal(d.searches, 1);
-  const tools = client.calls[0].tools ?? [];
-  assert.ok(tools.some((t) => 'type' in t && t.type === 'web_search_20260209'));
+await test('Ask: membership, years, comparisons and follow-ups', () => {
+  const m = ask('How many countries had joined by 2017?');
+  assert.match(m.reply, /By the end of 2017, \*\*\d+\*\* countries/);
+  assert.deepEqual(m.actions[0], { action: 'set_year', year: 2017 });
+  assert.deepEqual(ask('2019').actions, [{ action: 'set_year', year: 2019 }]);
+  assert.match(ask('compare Pakistan vs Bangladesh').reply, /Comparing Pakistan and Bangladesh/);
+  const first = ask('Tell me about Kenya');
+  const follow = ask('what about its railways?', first.context);
+  assert.match(follow.reply, /Railways & metros on the map/);
+  assert.match(follow.reply, /Mombasa–Nairobi/);
 });
 
-await test('News digest: asks the model to retry when too few items are sourced', async () => {
-  const client = fake([
-    msg('tool_use', [...searchResults('s1', goodUrls), toolUse('p1', 'publish_digest', { overview: 'O', items: [item(['https://fake.example/1'])] })]),
-    (p) => {
-      assert.equal(lastToolResults(p)[0].is_error, true);
-      return msg('tool_use', [toolUse('p2', 'publish_digest', { overview: 'O', items: goodUrls.map((u) => item([u])) })]);
-    },
-    msg('end_turn', [text('ok')]),
-  ]);
-  const d = await runNewsDigest(client, '2026-10-27');
-  assert.equal(d.items.length, 3);
+await test('Ask: unknown questions get help, never invented facts', () => {
+  assert.match(ask('asdf qwerty').reply, /couldn't match that/);
+  assert.match(ask('help').reply, /simple rules rather than AI/);
+  assert.match(ask('Portugal').reply, /no flagship projects in Portugal/);
 });
 
-await test('News digest: fails clearly if nothing is published', async () => {
-  const client = fake([msg('end_turn', [text('I could not find news.')])]);
-  await assert.rejects(runNewsDigest(client, '2026-10-27'), /did not produce a digest/);
-});
+// ---- My Briefing ----------------------------------------------------------------------------
 
-// ---- Agent 2: Project Watcher --------------------------------------------------------------
-
-await test('Project Watcher: records a sourced change for a project', async () => {
-  const p = projectById.get('east-coast-rail-link')!;
-  const client = fake([
-    msg('tool_use', [
-      ...searchResults('s1', ['https://www.thestar.com.my/news/ecrl']),
-      toolUse('r1', 'report_finding', {
-        changed: true,
-        suggested_status: 'partially-operational',
-        status_note: 'Northern section opened.',
-        summary: 'Reports say…',
-        as_of: '2026-10-01',
-        sources: [{ url: 'https://www.thestar.com.my/news/ecrl', title: 'ECRL', publisher: 'The Star' }],
-      }),
-    ]),
-    msg('end_turn', [text('Done.')]),
-  ]);
-  const f = await checkProject(client, p, '2026-10-27');
-  assert.ok(f && f.changed && f.suggested_status === 'partially-operational' && f.sources.length === 1);
-});
-
-await test('Project Watcher: a change without real sources is rejected', async () => {
-  const p = projectById.get('east-coast-rail-link')!;
-  const client = fake([
-    msg('tool_use', [toolUse('r1', 'report_finding', { changed: true, suggested_status: 'operational', status_note: 'x', summary: 'x', as_of: 'x', sources: [{ url: 'https://nowhere.example', title: 't', publisher: 'p' }] })]),
-    (params) => {
-      assert.equal(lastToolResults(params)[0].is_error, true);
-      return msg('tool_use', [toolUse('r2', 'report_finding', { changed: false, suggested_status: p.status, status_note: '', summary: 'No news.', as_of: '2026-10-27', sources: [] })]);
-    },
-    msg('end_turn', [text('Done.')]),
-  ]);
-  const f = await checkProject(client, p, '2026-10-27');
-  assert.ok(f && !f.changed);
-});
-
-await test('Project Watcher: checks unfinished projects plus the least recently checked others', () => {
-  const list = pickProjects(new Map([['laos-china-railway', '2026-10-20']]), 4);
-  assert.ok(list.some((p) => p.id === 'east-coast-rail-link'));
-  assert.ok(list.filter((p) => ['operational', 'completed', 'cancelled'].includes(p.status)).length === 4);
-  assert.ok(!list.some((p) => p.id === 'laos-china-railway'), 'recently checked project waits its turn');
-});
-
-// ---- Agent 3: My Briefing ------------------------------------------------------------------
-
-await test('My Briefing: includes profile, saved items and news in the request', async () => {
-  const profile: Profile = {
-    id: 'u',
-    display_name: 'Angela',
-    affiliation: 'FAU',
-    region_of_interest: 'Sub-Saharan Africa',
-    bio: 'global politics',
-    saved_items: [
-      { kind: 'country', id: 'KEN' },
-      { kind: 'project', id: 'mombasa-nairobi-sgr' },
+await test('Briefing: covers saved items, region and matching news', () => {
+  const md = buildBriefing({
+    data,
+    profile: { display_name: 'Ana', region_of_interest: 'Sub-Saharan Africa', saved_items: [{ kind: 'country', id: 'KEN' }, { kind: 'project', id: 'lekki-deep-sea-port' }] },
+    news: [
+      { headline: 'Kenya seeks Chinese loan', date: '2026-10-24', topic: 'Belt and Road & development finance', countries: ['KEN'], bri_related: true, sources: [{ url: 'https://dip/1', publisher: 'The Diplomat' }] },
+      { headline: 'Unrelated', date: '2026-10-24', topic: 'Security', countries: ['PHL'], bri_related: false, sources: [{ url: 'https://dip/3', publisher: 'The Diplomat' }] },
     ],
-    created_at: '',
-    updated_at: '',
-  };
-  const client = fake([
-    (p) => {
-      const user = String(p.messages[0].content);
-      assert.match(user, /Sub-Saharan Africa/);
-      assert.match(user, /Country: Kenya/);
-      assert.match(user, /Mombasa–Nairobi/);
-      assert.match(user, /Kenya rail deal/);
-      return msg('tool_use', [toolUse('t1', 'get_country', { iso3: 'KEN' })]);
-    },
-    msg('end_turn', [text('## At a glance\nKenya…')]),
-  ]);
-  const r = await runBriefing(client, profile, [
-    { headline: 'Kenya rail deal', date: '2026-10-20', summary: 's', why_it_matters: '', perspectives: '', topic: 'Diplomacy', countries: ['KEN'], bri_related: true, sources: [{ url: 'u', title: 't', publisher: 'Reuters' }] },
-  ]);
-  assert.match(r.markdown, /At a glance/);
+    updates: {},
+    now: NOW,
+  });
+  assert.match(md, /## Briefing for Ana, 27 October 2026/);
+  assert.match(md, /\*\*Kenya\*\*: MoU 2017/);
+  assert.match(md, /\*\*Lekki Deep Sea Port\*\*: operational/);
+  assert.match(md, /### Sub-Saharan Africa/);
+  assert.match(md, /### In the news for your countries and region\n\n- Kenya seeks Chinese loan \(\[The Diplomat\]\(https:\/\/dip\/1\)/);
+  assert.ok(!md.includes('Unrelated'));
 });
 
-// ---- HTTP handlers -------------------------------------------------------------------------
+await test('Briefing: works for a new user with an empty profile', () => {
+  const md = buildBriefing({ data, profile: null, news: [], updates: {}, now: NOW });
+  assert.match(md, /no saved items yet/);
+  assert.match(md, /### Worldwide/);
+});
 
-await test('Ask endpoint: 503 with a clear message when keys are missing', async () => {
-  delete process.env.ANTHROPIC_API_KEY;
+// ---- News endpoint, end to end with fetch mocked ------------------------------------------
+
+await test('News endpoint: 503 when the service key is missing', async () => {
   delete process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const { default: handler } = await import('../netlify/functions/agent-ask.mts');
-  const res = await handler(new Request('http://x/api/agents/ask', { method: 'POST', body: '{}' }));
+  const { default: handler } = await import('../netlify/functions/agent-news-run.mts');
+  const res = await handler(new Request('http://x/api/agents/news/run', { method: 'POST' }));
   assert.equal(res.status, 503);
-  assert.match((await res.json()).error, /not set up yet/);
 });
 
-await test('Ask endpoint: 400 for an empty question (before any network call)', async () => {
-  process.env.ANTHROPIC_API_KEY = 'test';
-  process.env.SUPABASE_SERVICE_ROLE_KEY = 'test';
-  const { default: handler } = await import('../netlify/functions/agent-ask.mts');
-  const res = await handler(new Request('http://x/api/agents/ask', { method: 'POST', body: JSON.stringify({ messages: [] }) }));
-  assert.equal(res.status, 400);
-});
-
-await test('Status endpoint reports configuration without exposing secrets', async () => {
-  const { default: handler } = await import('../netlify/functions/agent-status.mts');
-  const body = await (await handler()).json();
-  assert.deepEqual(Object.keys(body).sort(), ['anthropic', 'model', 'ready', 'supabase']);
-  assert.ok(!JSON.stringify(body).includes('test'));
+await test('News endpoint: an admin run reads the feeds and publishes a digest', async () => {
+  process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key';
+  const realFetch = globalThis.fetch;
+  const inserted: Record<string, unknown>[] = [];
+  const runUpdates: Record<string, unknown>[] = [];
+  const feedXml = new Map<string, string>([
+    [feed('bbc').url, rss(rssItem("China tells Israel to stop 'forced establishment'", 'Foreign Minister Wang Yi spoke.', 'https://bbc/1', new Date(Date.now() - 864e5).toUTCString()))],
+    [feed('diplomat').url, rss(rssItem('Kenya seeks Chinese loan for railway', 'New Belt and Road financing.', 'https://dip/1', new Date(Date.now() - 2 * 864e5).toUTCString()))],
+  ]);
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+    const method = init?.method ?? (input instanceof Request ? input.method : 'GET');
+    const headers = new Headers(init?.headers);
+    const one = (headers.get('accept') ?? '').includes('vnd.pgrst.object');
+    const reply = (body: unknown, status = 200, extra: Record<string, string> = {}) =>
+      new Response(body === null ? null : JSON.stringify(one && Array.isArray(body) ? body[0] : body), { status, headers: { 'content-type': 'application/json', ...extra } });
+    if (feedXml.has(url)) return new Response(feedXml.get(url), { status: 200 });
+    if (FEEDS.some((f) => f.url === url)) return new Response('nope', { status: 503 });
+    if (url.includes('/auth/v1/user')) {
+      assert.equal(headers.get('authorization'), 'Bearer user-token');
+      return reply({ id: 'u1', email: 'admin@example.com', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {}, created_at: '' });
+    }
+    if (url.includes('/rest/v1/app_admins')) return reply([{ user_id: 'u1' }]);
+    if (url.includes('/rest/v1/agent_usage')) return method === 'HEAD' ? new Response(null, { status: 200, headers: { 'content-range': '*/0' } }) : reply(null, 201);
+    if (url.includes('/rest/v1/agent_runs') && method === 'POST') return reply([{ id: 'run-1' }], 201);
+    if (url.includes('/rest/v1/agent_runs') && method === 'PATCH') {
+      runUpdates.push(JSON.parse(String(init?.body)));
+      return reply(null, 204);
+    }
+    if (url.includes('/rest/v1/news_digests') && method === 'POST') {
+      inserted.push(JSON.parse(String(init?.body)));
+      return reply([{ id: 'digest-1' }], 201);
+    }
+    throw new Error(`Unexpected fetch ${method} ${url}`);
+  }) as typeof fetch;
+  try {
+    const { default: handler } = await import('../netlify/functions/agent-news-run.mts');
+    const denied = await handler(new Request('http://x/api/agents/news/run', { method: 'POST' }));
+    assert.equal(denied.status, 403);
+    const res = await handler(new Request('http://x/api/agents/news/run', { method: 'POST', headers: { authorization: 'Bearer user-token' } }));
+    const body = await res.json();
+    assert.equal(res.status, 200, JSON.stringify(body));
+    assert.equal(body.stories, 2);
+    assert.equal(body.outlets, 2);
+    assert.equal(body.failed.length, FEEDS.length - 2);
+    assert.equal(inserted.length, 1);
+    assert.equal(inserted[0].status, 'ready');
+    assert.equal(inserted[0].model, 'rss-rules');
+    assert.equal((inserted[0].items as unknown[]).length, 2);
+    assert.equal(runUpdates.at(-1)?.status, 'succeeded');
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });
 
 console.log(`\n${passed} agent tests passed${process.exitCode ? ' (with failures above)' : ''}`);

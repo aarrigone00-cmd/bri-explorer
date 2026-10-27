@@ -1808,38 +1808,6 @@ svg {
   font-size: 14px;
   margin: 10px 0 4px;
 }
-.ask__thinking {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--text-muted);
-}
-.ask__thinking span {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-  animation: ask-pulse 1s infinite ease-in-out;
-}
-.ask__thinking span:nth-child(2) {
-  animation-delay: 0.15s;
-}
-.ask__thinking span:nth-child(3) {
-  animation-delay: 0.3s;
-  margin-right: 6px;
-}
-@keyframes ask-pulse {
-  0%,
-  100% {
-    opacity: 0.25;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-#ask-notice:not(:empty) {
-  padding: 0 14px;
-}
 .ask__form {
   display: flex;
   gap: 8px;

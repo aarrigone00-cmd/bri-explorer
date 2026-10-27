@@ -1,4 +1,5 @@
-import { AgentRequestError, agentStatus, callAgent } from '../agents/client';
+import { AgentRequestError, callAgent } from '../agents/client';
+import { buildBriefing, type BriefingNewsItem } from '../agents/briefing';
 import { getSupabase, isSupabaseConfigured } from '../auth/supabase';
 import { STATUS_LABELS } from '../config';
 import type { Store } from '../state/store';
@@ -7,7 +8,7 @@ import { $, escapeHtml, safeUrl } from './dom';
 import { renderMarkdown } from './markdown';
 
 // Agents inside the profile dialog:
-//  - Agent 3 "My Briefing": generate and show the user's personal briefing.
+//  - Agent 3 "My Briefing": a personal briefing written in the browser.
 //  - Agent 2 "Project Watcher": admins review suggested project updates.
 // Also loads admin status and the approved updates shown on project panels.
 
@@ -55,7 +56,11 @@ export function initAgentProfile(data: Dataset, store: Store): void {
   if (store.get().user) setTimeout(() => void checkAdmin(), 0);
   store.subscribe((s, prev) => {
     // Deferred: never call Supabase from inside its auth callback.
-    if (s.user?.id !== prev.user?.id) setTimeout(() => void checkAdmin(), 0);
+    if (s.user?.id !== prev.user?.id) {
+      setTimeout(() => void checkAdmin(), 0);
+      delete $('#briefing-body').dataset.generated;
+      ($('#briefing-generate') as HTMLButtonElement).textContent = 'Generate';
+    }
     if (s.isAdmin !== prev.isAdmin) $('#review-section').hidden = !s.isAdmin;
   });
 
@@ -70,42 +75,34 @@ export function initAgentProfile(data: Dataset, store: Store): void {
   const briefingBody = $('#briefing-body');
   const generate = $('#briefing-generate') as HTMLButtonElement;
 
-  async function showLatestBriefing() {
-    const user = store.get().user;
-    if (!user) return;
-    const status = await agentStatus();
-    generate.disabled = !status.ready;
-    if (!status.ready) message('#briefing-message', "The AI agents aren't switched on for this site yet.");
+  function showBriefingIntro() {
+    if (briefingBody.dataset.generated) return;
+    briefingBody.innerHTML = `<p class="muted small">A one-page summary of your saved items, your region of interest and this week's news, written from the site's data.</p>`;
+  }
+
+  async function latestNews(): Promise<BriefingNewsItem[]> {
     try {
       const sb = await getSupabase();
-      const { data: row } = await sb
-        .from('user_briefings')
-        .select('content, created_at')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      briefingBody.innerHTML = row
-        ? `<p class="muted small">Generated ${escapeHtml(fmt(row.created_at))}</p>${renderMarkdown(row.content)}`
-        : `<p class="muted small">Get a one-page AI briefing on your region of interest, saved items and the latest news. Up to 3 per day.</p>`;
-    } catch (err) {
-      console.error(err);
+      const { data: row } = await sb.from('news_digests').select('items').eq('status', 'ready').order('completed_at', { ascending: false }).limit(1).maybeSingle();
+      return (row?.items ?? []) as BriefingNewsItem[];
+    } catch {
+      return [];
     }
   }
 
   generate.addEventListener('click', async () => {
     generate.disabled = true;
-    generate.textContent = 'Writing…';
-    message('#briefing-message', 'Writing your briefing. This usually takes 15–40 seconds.');
     try {
-      const res = await callAgent<{ content: string; created_at: string; truncated?: boolean }>('/api/agents/briefing');
-      briefingBody.innerHTML = `<p class="muted small">Generated ${escapeHtml(fmt(res.created_at))}</p>${renderMarkdown(res.content)}`;
+      const md = buildBriefing({ data, profile: store.get().profile, news: await latestNews(), updates: store.get().projectUpdates });
+      briefingBody.innerHTML = renderMarkdown(md);
+      briefingBody.dataset.generated = '1';
+      generate.textContent = 'Refresh';
       message('#briefing-message', '');
     } catch (err) {
-      message('#briefing-message', err instanceof AgentRequestError ? err.message : 'Could not generate the briefing.', 'error');
+      console.error(err);
+      message('#briefing-message', 'Could not build the briefing.', 'error');
     } finally {
       generate.disabled = false;
-      generate.textContent = 'Generate';
     }
   });
 
@@ -123,9 +120,15 @@ export function initAgentProfile(data: Dataset, store: Store): void {
       ]);
       if (error) throw error;
       pending = (rows ?? []) as ProjectUpdate[];
-      const d = (run?.detail ?? {}) as { checked?: number; suggestions?: number; error?: string };
+      const d = (run?.detail ?? {}) as { checked?: number; suggestions?: number; failed?: number; error?: string };
       $('#watch-last').textContent = run
-        ? `Last run ${fmt(run.started_at)}: ${run.status}${run.status === 'succeeded' ? `, checked ${d.checked ?? '?'} projects, ${d.suggestions ?? 0} new suggestion(s)` : d.error ? ` (${d.error})` : ''}.`
+        ? `Last run ${fmt(run.started_at)}: ${run.status}${
+            run.status === 'succeeded'
+              ? `, checked ${d.checked ?? '?'} projects, ${d.suggestions ?? 0} new suggestion(s)${d.failed ? `, ${d.failed} not reached (GDELT busy)` : ''}`
+              : d.error
+                ? ` (${d.error})`
+                : ''
+          }.`
         : 'The Project Watcher runs every Monday. It hasn’t run yet.';
       renderReview();
     } catch (err) {
@@ -181,7 +184,7 @@ export function initAgentProfile(data: Dataset, store: Store): void {
     btn.disabled = true;
     try {
       await callAgent('/api/agents/watch/run');
-      message('#review-message', 'Project Watcher started. It takes a few minutes; reopen your profile later to see suggestions.', 'success');
+      message('#review-message', 'Project Watcher started. It searches GDELT one project at a time, so it takes about 5 minutes; reopen your profile later to see suggestions.', 'success');
     } catch (err) {
       message('#review-message', err instanceof AgentRequestError ? err.message : 'Could not start the Project Watcher.', 'error');
     } finally {
@@ -191,7 +194,7 @@ export function initAgentProfile(data: Dataset, store: Store): void {
 
   document.addEventListener('bri:open-profile', () => {
     setTimeout(() => {
-      void showLatestBriefing();
+      showBriefingIntro();
       void loadReview();
     }, 0);
   });

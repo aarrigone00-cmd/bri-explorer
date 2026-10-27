@@ -72,7 +72,7 @@ async function main() {
   initProfile(data, store);
   initAgentProfile(data, store);
   initNews(data, store);
-  initAsk(store);
+  initAsk(data, store);
 
   // Fly to whatever gets selected (from the map, search or the detail panel).
   store.subscribe((s, prev) => {

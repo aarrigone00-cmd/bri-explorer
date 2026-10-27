@@ -23,6 +23,12 @@ for (const g of topo.objects.countries.geometries) {
 }
 writeFileSync(`${root}public/data/world-50m.json`, JSON.stringify(topo));
 
+// Country names for text matching (news headlines, questions): every country
+// with an ISO code, by its Natural Earth name.
+const names = {};
+for (const g of topo.objects.countries.geometries) if (g.properties.iso3) names[g.properties.iso3] = g.properties.name;
+writeFileSync(`${root}public/data/country-names.json`, JSON.stringify(names, null, 0) + '\n');
+
 // Largest-ring centroid per ISO3 code.
 function ringArea(ring) {
   let a = 0;

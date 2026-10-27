@@ -4,8 +4,9 @@ import type { Store } from '../state/store';
 import type { Dataset } from '../types';
 import { $, escapeHtml, safeUrl } from './dom';
 
-// Agent 4 UI: "China & the World" — the latest news digest, read straight from
-// Supabase (published digests are public). Admins can start a fresh run.
+// Agent 4 UI: "China & the World" — the latest weekly digest of headlines
+// collected from news RSS feeds, read straight from Supabase (published
+// digests are public). Admins can publish a fresh one.
 
 interface DigestItem {
   headline: string;
@@ -67,17 +68,17 @@ export function initNews(data: Dataset, store: Store): void {
   function render() {
     const admin = store.get().isAdmin;
     const adminBar = admin
-      ? `<div class="news__admin"><button type="button" class="chip-button chip-button--small" data-news-run>Run the news agent now</button><span class="muted small">${escapeHtml(adminNote)}</span></div>`
+      ? `<div class="news__admin"><button type="button" class="chip-button chip-button--small" data-news-run>Collect this week's news now</button><span class="muted small">${escapeHtml(adminNote)}</span></div>`
       : '';
     if (!digest) {
-      body.innerHTML = `${adminBar}<div class="card"><p>No digest has been published yet. The news agent runs once a week (Thursdays); the first digest will appear here after its first run.</p></div>`;
+      body.innerHTML = `${adminBar}<div class="card"><p>No digest has been published yet. Headlines are collected once a week (Thursdays); the first digest will appear here after the first run.</p></div>`;
       return;
     }
     const items = digest.items.filter((i) => filter === 'all' || i.bri_related);
     body.innerHTML = `
       ${adminBar}
       <div class="news__meta">
-        <p class="muted small">Updated ${escapeHtml(fmtDate(digest.completed_at))}${digest.search_count ? ` · ${digest.search_count} web searches` : ''} · ${digest.items.length} stories</p>
+        <p class="muted small">Updated ${escapeHtml(fmtDate(digest.completed_at))}${digest.search_count ? ` · ${digest.search_count} outlets checked` : ''} · ${digest.items.length} stories</p>
         <div class="news__filter" role="group" aria-label="Filter stories">
           <button type="button" class="chip-button chip-button--small${filter === 'all' ? ' is-on' : ''}" data-news-filter="all" aria-pressed="${filter === 'all'}">All stories</button>
           <button type="button" class="chip-button chip-button--small${filter === 'bri' ? ' is-on' : ''}" data-news-filter="bri" aria-pressed="${filter === 'bri'}">Belt and Road only</button>
@@ -96,7 +97,7 @@ export function initNews(data: Dataset, store: Store): void {
               ${it.date ? `<span class="muted small">${escapeHtml(fmtDate(it.date))}</span>` : ''}
             </div>
             <h3>${escapeHtml(it.headline)}</h3>
-            <p>${escapeHtml(it.summary)}</p>
+            ${it.summary ? `<p>${escapeHtml(it.summary)}</p>` : ''}
             ${it.why_it_matters ? `<p class="small"><strong>Why it matters:</strong> ${escapeHtml(it.why_it_matters)}</p>` : ''}
             ${it.perspectives ? `<p class="small muted"><strong>Perspectives:</strong> ${escapeHtml(it.perspectives)}</p>` : ''}
             ${
@@ -115,7 +116,7 @@ export function initNews(data: Dataset, store: Store): void {
             : '<p class="muted">No Belt and Road stories in this digest.</p>'
         }
       </div>
-      <p class="card__note">Researched and written by an AI agent using web search. It is told to stay neutral and attribute claims, and every link was found in its search results. Check the sources before relying on a story.</p>`;
+      <p class="card__note">Collected automatically from the RSS feeds of BBC News, The Guardian, the South China Morning Post, The Diplomat, Al Jazeera, Dialogue Earth and CGTN (Chinese state media). Stories are picked and tagged by keyword rules, and the summaries are the outlets' own descriptions. Inclusion is not endorsement; read the original articles before relying on a story.</p>`;
   }
 
   body.addEventListener('click', async (e) => {
@@ -129,13 +130,15 @@ export function initNews(data: Dataset, store: Store): void {
       store.set({ selection: { kind: 'country', iso3: c.dataset.newsCountry! } });
       document.getElementById('map-section')?.scrollIntoView({ behavior: 'smooth' });
     } else if (t.closest('[data-news-run]')) {
-      adminNote = 'Starting…';
+      adminNote = 'Collecting headlines…';
       render();
       try {
-        await callAgent('/api/agents/news/run');
-        adminNote = 'Started. A new digest usually takes 2–5 minutes; refresh the page to see it.';
+        const res = await callAgent<{ stories: number; outlets: number; failed: string[] }>('/api/agents/news/run', undefined, { timeoutMs: 60000 });
+        adminNote = `Published ${res.stories} stories from ${res.outlets} outlets${res.failed?.length ? ` (could not reach ${res.failed.join(', ')})` : ''}.`;
+        await load();
+        return;
       } catch (err) {
-        adminNote = err instanceof AgentRequestError ? err.message : 'Could not start the agent.';
+        adminNote = err instanceof AgentRequestError ? err.message : 'Could not collect the news.';
       }
       render();
     }

@@ -1,12 +1,15 @@
 import type { Config } from '@netlify/functions';
-import { siteUrl } from '../lib/config';
-import { internalToken } from '../lib/supabase';
+import { supabaseServiceKey } from '../lib/config';
+import { runNews } from '../lib/news/run';
 
-// Starts the news digest agent once a week (scheduled functions may only run
-// 30 s, so the work happens in the background function).
+// Publishes the weekly "China & the World" digest from free RSS feeds.
 export default async () => {
-  const res = await fetch(`${siteUrl()}/api/agents/news/run`, { method: 'POST', headers: { 'x-bri-internal': internalToken() } });
-  console.log('News digest run requested:', res.status);
+  if (!supabaseServiceKey()) return console.warn('News digest skipped: SUPABASE_SERVICE_ROLE_KEY is not set.');
+  try {
+    console.log('News digest published:', await runNews('schedule'));
+  } catch (err) {
+    console.error('News digest failed:', err);
+  }
 };
 
 // Thursdays 06:00 UTC; each run covers the past 7 days. Thursday (not Monday,
