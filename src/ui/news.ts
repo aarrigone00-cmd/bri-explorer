@@ -70,7 +70,7 @@ export function initNews(data: Dataset, store: Store): void {
       ? `<div class="news__admin"><button type="button" class="chip-button chip-button--small" data-news-run>Run the news agent now</button><span class="muted small">${escapeHtml(adminNote)}</span></div>`
       : '';
     if (!digest) {
-      body.innerHTML = `${adminBar}<div class="card"><p>No digest has been published yet. The news agent runs once a day; the first digest will appear here after its first run.</p></div>`;
+      body.innerHTML = `${adminBar}<div class="card"><p>No digest has been published yet. The news agent runs twice a week (Mondays and Thursdays); the first digest will appear here after its first run.</p></div>`;
       return;
     }
     const items = digest.items.filter((i) => filter === 'all' || i.bri_related);

@@ -93,7 +93,7 @@ Four agents built on the Claude API (`claude-opus-5-5` by default) run as **Netl
 | **Ask the Map** | Signed-in users (✦ button on the map) | Answers questions from the site's own data through tools (search, country profile, AidData queries, overview), cites the dataset, and can zoom the map, move the timeline or switch layers | On demand, max 30 per user per day |
 | **Project Watcher** | Admins (profile → "Project updates to review") | Searches recent news on each unfinished flagship project (plus 4 others in rotation) and files **suggested** status updates with sources. Nothing is published until an admin approves; approved updates appear on the project panel | Mondays 07:00 UTC, or "Run Project Watcher" |
 | **My Briefing** | Signed-in users (profile → "My briefing") | A one-page briefing from the user's region of interest, saved items, the site's data and the latest news digest | On demand, max 3 per day |
-| **China & the World** | Everyone (News section) | Researches the week's China foreign-policy news with web search and publishes a neutral, cited digest. Story links must come from the agent's own search results; invented links are dropped | Daily 06:00 UTC, or "Run the news agent now" (admins) |
+| **China & the World** | Everyone (News section) | Researches the week's China foreign-policy news with web search and publishes a neutral, cited digest. Story links must come from the agent's own search results; invented links are dropped | Mondays and Thursdays 06:00 UTC, or "Run the news agent now" (admins) |
 
 ### Setup (Netlify → Site configuration → Environment variables)
 
@@ -110,7 +110,7 @@ Redeploy after adding them. Until both secrets are set, the agents say they aren
 
 - Set a **monthly spend limit** in the Anthropic Console.
 - The interactive agents need sign-in and have per-user daily limits (`agent_usage` table).
-- Rough running costs at Opus 5.5 prices: a few cents per question or briefing. The daily news digest (up to 8 web searches) and the weekly Project Watcher (up to 3 searches per project) together typically cost on the order of US$10–25 a month. To cut that, switch `AGENT_MODEL`, or change the schedules in `netlify/functions/agent-*-schedule.mts`.
+- Rough running costs at Opus 5.5 prices: a few cents per question or briefing. The twice-weekly news digest (up to 8 web searches per run) and the weekly Project Watcher (up to 3 searches per project) together typically cost on the order of US$8–15 a month. To cut that, switch `AGENT_MODEL`, or change the schedules in `netlify/functions/agent-*-schedule.mts`.
 
 ### How it fits together
 

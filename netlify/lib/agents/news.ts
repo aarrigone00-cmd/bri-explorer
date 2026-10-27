@@ -4,7 +4,7 @@ import { countryByIso } from '../data';
 import { runToolLoop } from '../loop';
 import { clip, recordingClient, verifiedSources, webSearchTool, type SourceRef } from '../web';
 
-// "China & the World": a daily, cited digest of news about China's foreign policy.
+// "China & the World": a twice-weekly, cited digest of news about China's foreign policy.
 
 export const NEWS_TOPICS = ['Belt and Road & development finance', 'Diplomacy', 'Trade & economy', 'Security', 'Global governance', 'Technology & standards'] as const;
 
