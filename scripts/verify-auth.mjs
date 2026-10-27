@@ -98,6 +98,66 @@ async function mockAuth(page) {
     }
     return route.fulfill({ status: 405 });
   });
+
+  // ---- Agents: Netlify function endpoints (Claude is never called in tests) ----
+  const fulfillJson = (route, status, data) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(data) });
+  const bearer = (req) => (req.headers()['authorization'] ?? '').includes(jwt);
+  await page.route('**/api/agents/status', (route) => fulfillJson(route, 200, { ready: true, anthropic: true, supabase: true }));
+  await page.route('**/api/agents/ask', (route) => {
+    const req = route.request();
+    calls.push({ method: 'POST', path: '/api/ask', body: JSON.parse(req.postData() || '{}'), authed: bearer(req) });
+    if (!bearer(req)) return fulfillJson(route, 401, { error: 'Please sign in to use the agents.' });
+    return fulfillJson(route, 200, {
+      reply: 'Kenya received **US$4.8 bn** in rail commitments (AidData GCDF v3).\n\n- Mombasa–Nairobi SGR\n- [Source](https://www.aiddata.org/)',
+      actions: [{ action: 'focus_country', iso3: 'KEN' }, { action: 'set_year', year: 2017 }],
+      truncated: false,
+    });
+  });
+  await page.route('**/api/agents/briefing', (route) => {
+    calls.push({ method: 'POST', path: '/api/briefing', authed: bearer(route.request()) });
+    return fulfillJson(route, 200, { id: 'b1', content: '## At a glance\nYour region is **Sub-Saharan Africa**.\n## Your saved items\n- Kenya', created_at: new Date().toISOString() });
+  });
+  for (const agent of ['news', 'watch']) {
+    await page.route(`**/api/agents/${agent}/run`, (route) => {
+      calls.push({ method: 'POST', path: `/api/${agent}/run`, authed: bearer(route.request()) });
+      return route.fulfill({ status: 202, body: '' });
+    });
+  }
+
+  // ---- Agents: Supabase tables (RLS behaviour mirrored) ----
+  const rows = (route, data) => {
+    const wantsObject = (route.request().headers()['accept'] ?? '').includes('vnd.pgrst.object');
+    return fulfillJson(route, 200, wantsObject ? data[0] ?? null : data);
+  };
+  await page.route('**/rest/v1/app_admins**', (route) => rows(route, bearer(route.request()) ? [{ user_id: 'user-1' }] : []));
+  await page.route('**/rest/v1/news_digests**', (route) =>
+    rows(route, [{
+      id: 'd1',
+      overview: 'A week of summit diplomacy and new infrastructure deals.',
+      completed_at: new Date().toISOString(),
+      search_count: 7,
+      model: 'claude-opus-5-5',
+      items: [
+        { headline: 'China and Kenya sign rail financing deal', date: '2026-10-22', summary: 'Officials signed an agreement.', why_it_matters: 'Extends the SGR.', perspectives: 'Nairobi welcomed it; critics cite debt.', topic: 'Belt and Road & development finance', countries: ['KEN'], bri_related: true, sources: [{ url: 'https://www.reuters.com/x', title: 'Rail deal', publisher: 'Reuters' }] },
+        { headline: 'Foreign ministers meet at regional forum', date: '2026-10-21', summary: 'Talks on trade.', why_it_matters: '', perspectives: '', topic: 'Diplomacy', countries: [], bri_related: false, sources: [{ url: 'https://apnews.com/y', title: 'Forum', publisher: 'AP' }] },
+        { headline: 'Port agreement in Peru expanded', date: '2026-10-20', summary: 'Chancay expansion.', why_it_matters: '', perspectives: '', topic: 'Trade & economy', countries: ['PER'], bri_related: true, sources: [{ url: 'https://example.org/z', title: 'Port', publisher: 'Example' }] },
+      ],
+    }]),
+  );
+  const approved = { id: 's0', project_id: 'east-coast-rail-link', current_status: 'under-construction', suggested_status: 'partially-operational', status_note: 'The northern section opened to passengers.', summary: '', as_of: '2026-10-01', sources: [{ url: 'https://www.thestar.com.my/ecrl', title: 'ECRL', publisher: 'The Star' }], review_status: 'approved', reviewed_at: '2026-10-02T00:00:00Z', created_at: '2026-10-01T00:00:00Z' };
+  const pending = { ...approved, id: 's1', project_id: 'kyaukphyu-deep-sea-port', current_status: 'planned', suggested_status: 'suspended', status_note: 'Work reported halted.', summary: 'Two outlets report a halt.', review_status: 'pending', reviewed_at: null };
+  await page.route('**/rest/v1/project_update_suggestions**', (route) => {
+    const req = route.request();
+    const q = decodeURIComponent(new globalThis.URL(req.url()).search);
+    if (req.method() === 'PATCH') {
+      calls.push({ method: 'PATCH', path: '/rest/suggestions', query: q, body: JSON.parse(req.postData() || '{}'), authed: bearer(req) });
+      return rows(route, []);
+    }
+    if (q.includes('review_status=eq.pending')) return rows(route, bearer(req) ? [pending] : []);
+    return rows(route, [approved]);
+  });
+  await page.route('**/rest/v1/agent_runs**', (route) => rows(route, bearer(route.request()) ? [{ status: 'succeeded', started_at: '2026-10-26T07:00:00Z', finished_at: '2026-10-26T07:05:00Z', detail: { checked: 11, suggestions: 1 } }] : []));
+  await page.route('**/rest/v1/user_briefings**', (route) => rows(route, []));
   return calls;
 }
 
@@ -117,6 +177,15 @@ try {
     await page.goto(URL);
     await page.waitForSelector('[data-sign-in]');
     check(true, `[${tag}] "Sign in" button shown in header`);
+
+    // ---- Agents while signed out ----
+    await page.waitForSelector('#news-body .news-item');
+    check((await page.textContent('#news-body')).includes('China and Kenya sign rail financing deal'), `[${tag}] news digest is public`);
+    check(!(await page.locator('[data-news-run]').count()), `[${tag}] visitors don't see the admin run button`);
+    await page.click('#ask-toggle');
+    await page.waitForSelector('#ask-notice [data-ask-login]');
+    check(await page.locator('#ask-input').isDisabled(), `[${tag}] Ask the Map asks visitors to sign in`);
+    await page.click('#ask-close');
 
     // Wrong password → friendly error
     await page.click('[data-sign-in]');
@@ -171,6 +240,60 @@ try {
     check((await page.textContent('#profile-saved')).includes('Nothing saved yet'), `[${tag}] empty saved list explained`);
     await page.screenshot({ path: `${outDir}/${tag}-profile.png` });
     await page.click('#profile-close');
+
+    // ---- Agent 1: Ask the Map ----
+    await page.click('#ask-toggle');
+    await page.waitForSelector('#ask-input:not([disabled])');
+    check((await page.locator('.ask__chip').count()) >= 3, `[${tag}] ask panel shows suggested questions`);
+    await page.fill('#ask-input', 'Which country got the most rail loans?');
+    await page.keyboard.press('Enter');
+    await page.waitForSelector('.ask__msg--assistant strong', { state: 'attached' });
+    const askCall = calls.find((c) => c.path === '/api/ask');
+    check(askCall?.authed && askCall.body.messages.at(-1).content.includes('rail loans'), `[${tag}] question sent with the user's token`);
+    check(await page.evaluate(() => window.bri.store.get().year) === 2017, `[${tag}] agent's map actions applied (timeline)`);
+    await page.waitForFunction(() => document.querySelector('.detail__title')?.textContent === 'Kenya');
+    check(true, `[${tag}] agent's map actions applied (zoomed to Kenya)`);
+    const answerHtml = await page.innerHTML('.ask__msg--assistant');
+    check(answerHtml.includes('<li>') && answerHtml.includes('target="_blank"') && !answerHtml.includes('**'), `[${tag}] answer rendered as safe Markdown`);
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: `${outDir}/${tag}-ask.png` });
+    if (vp.name === 'phone') check(await page.locator('#ask-panel').isHidden(), `[${tag}] on phones the chat steps aside for the opened country`);
+    await page.click('[data-close-detail]');
+    if (await page.locator('#ask-panel').isVisible()) await page.click('#ask-close');
+    await page.evaluate(() => window.bri.store.set({ year: 2026 }));
+
+    // ---- Agent 3 (briefing) and Agent 2 (review queue) in the profile ----
+    await page.click('[data-open-profile]');
+    await page.waitForSelector('#review-section:not([hidden]) .review');
+    check((await page.textContent('#review-list')).includes('Kyaukphyu'), `[${tag}] admin sees pending Project Watcher suggestions`);
+    await page.click('#briefing-generate');
+    await page.waitForSelector('#briefing-body h4');
+    check((await page.textContent('#briefing-body')).includes('Sub-Saharan Africa'), `[${tag}] briefing generated and shown`);
+    await page.click('#review-list [data-review="approved"]');
+    await page.waitForSelector('#review-message.auth__message--success');
+    const patchCall = calls.find((c) => c.path === '/rest/suggestions');
+    check(patchCall?.body.review_status === 'approved' && patchCall.body.reviewed_by === 'user-1' && patchCall.query.includes('id=eq.s1'), `[${tag}] approving records the reviewer`);
+    await page.click('#watch-run');
+    await page.waitForFunction(() => document.querySelector('#review-message')?.textContent?.includes('started'));
+    check(calls.some((c) => c.path === '/api/watch/run' && c.authed), `[${tag}] admin can start the Project Watcher`);
+    await page.screenshot({ path: `${outDir}/${tag}-profile-agents.png` });
+    await page.click('#profile-close');
+
+    // ---- Agent 4 admin controls, and approved updates on project panels ----
+    await page.waitForSelector('[data-news-run]');
+    await page.click('[data-news-run]');
+    await page.waitForFunction(() => document.querySelector('.news__admin')?.textContent?.includes('Started'));
+    check(calls.some((c) => c.path === '/api/news/run' && c.authed), `[${tag}] admin can start the news agent`);
+    await page.click('[data-news-filter="bri"]');
+    check((await page.locator('.news-item').count()) === 2, `[${tag}] news "Belt and Road only" filter works`);
+    await page.locator('#news').screenshot({ path: `${outDir}/${tag}-news.png` });
+    await page.click('[data-news-country="KEN"]');
+    await page.waitForFunction(() => document.querySelector('.detail__title')?.textContent === 'Kenya');
+    check(true, `[${tag}] news country chip opens the country on the map`);
+    await page.evaluate(() => window.bri.store.set({ selection: { kind: 'project', id: 'east-coast-rail-link' } }));
+    await page.waitForSelector('.callout--update');
+    check((await page.textContent('.callout--update')).includes('northern section'), `[${tag}] approved update shown on the project panel`);
+    await page.click('[data-close-detail]');
 
     // ---- Save a country and a project from the map panels ----
     await page.evaluate(() => window.bri.store.set({ selection: { kind: 'country', iso3: 'KEN' } }));

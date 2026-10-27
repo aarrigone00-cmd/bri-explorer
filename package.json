@@ -7,8 +7,9 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "data": "node scripts/build-data.mjs",
-    "typecheck": "tsc --noEmit",
-    "verify": "node scripts/verify.mjs && node scripts/verify-auth.mjs"
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.netlify.json",
+    "verify": "node scripts/verify.mjs && node scripts/verify-auth.mjs",
+    "test:agents": "tsx scripts/test-agents.ts"
   },
   "repository": {
     "type": "git",

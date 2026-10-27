@@ -84,6 +84,49 @@ These can't be changed through the database, so they're done in the dashboard (*
 
 **Email delivery:** Supabase's built-in email sender only delivers to members of your Supabase organization's team, and only a few emails per hour. To let anyone sign up, add a custom SMTP provider (e.g. Resend, Postmark, SendGrid) under **Authentication → Emails → SMTP Settings**. Alternatively, turn off **Confirm email** under **Authentication → Sign In / Providers → Email** so sign-ups don't need an email; password reset still sends one.
 
+## AI agents
+
+Four agents built on the Claude API (`claude-opus-5-5` by default) run as **Netlify Functions**, so API keys stay on the server.
+
+| Agent | Who uses it | What it does | Runs |
+| --- | --- | --- | --- |
+| **Ask the Map** | Signed-in users (✦ button on the map) | Answers questions from the site's own data through tools (search, country profile, AidData queries, overview), cites the dataset, and can zoom the map, move the timeline or switch layers | On demand, max 30 per user per day |
+| **Project Watcher** | Admins (profile → "Project updates to review") | Searches recent news on each unfinished flagship project (plus 4 others in rotation) and files **suggested** status updates with sources. Nothing is published until an admin approves; approved updates appear on the project panel | Mondays 07:00 UTC, or "Run Project Watcher" |
+| **My Briefing** | Signed-in users (profile → "My briefing") | A one-page briefing from the user's region of interest, saved items, the site's data and the latest news digest | On demand, max 3 per day |
+| **China & the World** | Everyone (News section) | Researches the week's China foreign-policy news with web search and publishes a neutral, cited digest. Story links must come from the agent's own search results; invented links are dropped | Daily 06:00 UTC, or "Run the news agent now" (admins) |
+
+### Setup (Netlify → Site configuration → Environment variables)
+
+| Variable | Value | Secret? |
+| --- | --- | --- |
+| `ANTHROPIC_API_KEY` | From console.anthropic.com → API keys | Yes |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API keys → **secret** (or legacy `service_role`) key. Used only by the functions to save agent results and check sign-ins | Yes, never put it in a `VITE_` variable |
+| `AGENT_MODEL` (optional) | Model id, default `claude-opus-5-5`; e.g. `claude-sonnet-5-5` costs about half | No |
+| `AGENT_ASK_DAILY_LIMIT`, `AGENT_BRIEFING_DAILY_LIMIT` (optional) | Per-user daily limits (defaults 30 and 3) | No |
+
+Redeploy after adding them. Until both secrets are set, the agents say they aren't switched on and the rest of the site works normally. `/api/agents/status` reports which keys are present (true/false only).
+
+### Cost control
+
+- Set a **monthly spend limit** in the Anthropic Console.
+- The interactive agents need sign-in and have per-user daily limits (`agent_usage` table).
+- Rough running costs at Opus 5.5 prices: a few cents per question or briefing. The daily news digest (up to 8 web searches) and the weekly Project Watcher (up to 3 searches per project) together typically cost on the order of US$10–25 a month. To cut that, switch `AGENT_MODEL`, or change the schedules in `netlify/functions/agent-*-schedule.mts`.
+
+### How it fits together
+
+- `netlify/lib/` holds the shared code:
+  - `loop.ts`: the agent loop, with time and round budgets sized to Netlify's limits (60 s, or 15 min for background functions)
+  - `site-tools.ts`: the data tools
+  - `web.ts`: checks cited links against the agent's search results
+  - `agents/*.ts`: one file per agent
+- `netlify/functions/agent-*.mts` are the HTTP endpoints. The scheduled functions (30 s limit) only trigger the background functions that do the work.
+- Requests use the server-side refusal fallback (`fallbacks: "default"`) and prompt caching.
+- Supabase tables (`supabase/migrations/20261027170000_create_agents.sql`):
+  - `news_digests`, `project_update_suggestions`, `project_watch_log`, `user_briefings`, `agent_usage`, `agent_runs`, `app_admins`
+  - Row Level Security: anyone can read published digests and approved updates; users read their own briefings and usage; only admins see suggestions and run logs and can approve or reject. All writes go through the functions.
+- **Admins** are listed in `app_admins`. Add one in the Supabase SQL editor: `insert into app_admins (user_id) select id from auth.users where email = '…';`
+- Tests: `npm run test:agents` runs all four agents against a scripted fake of the Claude API (no key or network needed); `npm run verify` covers the UI.
+
 ## Data
 
 All data lives in `public/data/` as plain JSON, so you can update it without touching code.
@@ -187,7 +230,7 @@ Each feature is an `initX(data, store)` module that subscribes to the shared sto
 
 - **Country comparison**: add `compare: string[]` to `AppState`, a `ui/compare.ts` module, and use `computeStats`-style helpers in `lib/analytics.ts`.
 - **Additional datasets**: add the JSON to `public/data/`, load it in `data/loader.ts`, and extend `Dataset`.
-- **Live news / AI questions**: add a Netlify Function that holds the API key, and a `ui/news.ts` or `ui/ask.ts` module that calls `/.netlify/functions/...`.
+- **More agents**: add a file in `netlify/lib/agents/`, an endpoint in `netlify/functions/`, and a `ui/` module that calls it with `callAgent()` from `src/agents/client.ts` (see *AI agents*).
 - **Advanced analytics**: add pure functions to `lib/analytics.ts` and render them in the dashboard.
 
 ## Neutrality and accuracy

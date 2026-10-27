@@ -4,12 +4,15 @@ import { loadDataset } from './data/loader';
 import { yearRange } from './lib/analytics';
 import { createMap } from './map/map';
 import { Store } from './state/store';
+import { initAgentProfile } from './ui/agents-profile';
+import { initAsk } from './ui/ask';
 import { initAuth } from './ui/auth';
 import { initDashboard } from './ui/dashboard';
 import { initDetailPanel } from './ui/detail';
 import { $ } from './ui/dom';
 import { initFilters } from './ui/filters';
 import { initLegend } from './ui/legend';
+import { initNews } from './ui/news';
 import { initProfile } from './ui/profile';
 import { initSearch } from './ui/search';
 import { initSources } from './ui/sources';
@@ -39,6 +42,8 @@ async function main() {
     showLabels: true,
     user: null,
     profile: null,
+    isAdmin: false,
+    projectUpdates: {},
   });
   initTheme(store);
   void initAuth(store);
@@ -65,6 +70,9 @@ async function main() {
   initDashboard(data, store);
   initSources(data);
   initProfile(data, store);
+  initAgentProfile(data, store);
+  initNews(data, store);
+  initAsk(store);
 
   // Fly to whatever gets selected (from the map, search or the detail panel).
   store.subscribe((s, prev) => {

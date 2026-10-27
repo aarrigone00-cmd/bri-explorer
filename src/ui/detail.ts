@@ -235,6 +235,21 @@ export function initDetailPanel(data: Dataset, store: Store): void {
     `;
   }
 
+  /** Admin-approved update from the Project Watcher agent, if any. */
+  function updateCallout(p: Project): string {
+    const u = store.get().projectUpdates[p.id];
+    if (!u) return '';
+    const changed = u.suggested_status !== p.status;
+    return `<div class="callout callout--update">
+      <strong>Update${u.as_of ? ` (as of ${escapeHtml(u.as_of)})` : ''}:</strong>
+      ${changed ? `status now <strong>${escapeHtml(STATUS_LABELS[u.suggested_status] ?? u.suggested_status)}</strong>. ` : ''}${escapeHtml(u.status_note ?? '')}
+      <span class="small">Sources: ${u.sources
+        .map((s) => `<a href="${safeUrl(s.url)}" target="_blank" rel="noopener">${escapeHtml(s.publisher || s.title)}</a>`)
+        .join(' · ')}</span>
+      <span class="muted small">Found by the Project Watcher agent and approved by an editor.</span>
+    </div>`;
+  }
+
   function renderProject(p: Project, year: number) {
     const statusAtYear = projectStatusAt(p, year);
     const corridorNames = p.corridors.map((id) => corridorById.get(id)?.name).filter(Boolean) as string[];
@@ -251,6 +266,7 @@ export function initDetailPanel(data: Dataset, store: Store): void {
       </div>
       <p>${escapeHtml(p.description)}</p>
       ${p.statusNote ? `<p class="callout">${escapeHtml(p.statusNote)}</p>` : ''}
+      ${updateCallout(p)}
       <dl class="facts">
         <div><dt>Location</dt><dd>${escapeHtml(p.location)}</dd></div>
         <div><dt>Country</dt><dd>${countryLinks}</dd></div>
@@ -295,6 +311,7 @@ export function initDetailPanel(data: Dataset, store: Store): void {
 
   store.subscribe((s, prev) => {
     if (s.selection && s.selection === prev.selection && (s.user !== prev.user || s.profile !== prev.profile)) renderSaveButton();
+    if (s.selection?.kind === 'project' && s.selection === prev.selection && s.projectUpdates !== prev.projectUpdates) render();
     if (s.selection !== prev.selection || (s.selection && s.year !== prev.year)) render();
   });
 }

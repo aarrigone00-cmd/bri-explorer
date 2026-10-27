@@ -150,6 +150,21 @@ export type Selection =
 
 export type ThemePreference = 'light' | 'dark' | 'system';
 
+/** An admin-approved status update for a flagship project (Project Watcher). */
+export interface ProjectUpdate {
+  id: string;
+  project_id: string;
+  current_status: ProjectStatus;
+  suggested_status: ProjectStatus;
+  status_note: string | null;
+  summary: string | null;
+  as_of: string | null;
+  sources: { url: string; title: string; publisher: string }[];
+  review_status: 'pending' | 'approved' | 'rejected';
+  reviewed_at: string | null;
+  created_at: string;
+}
+
 /** A bookmarked map item stored in the user's profile. */
 export interface SavedItem {
   kind: 'country' | 'project' | 'record';

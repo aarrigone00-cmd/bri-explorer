@@ -1,4 +1,4 @@
-import type { LayerKey, Profile, Selection, ThemePreference } from '../types';
+import type { LayerKey, Profile, ProjectUpdate, Selection, ThemePreference } from '../types';
 
 export interface AppState {
   layers: Record<LayerKey, boolean>;
@@ -13,6 +13,10 @@ export interface AppState {
   user: { id: string; email: string; createdAt?: string } | null;
   /** The signed-in user's profile row, once loaded. */
   profile: Profile | null;
+  /** True when the signed-in user is listed in public.app_admins. */
+  isAdmin: boolean;
+  /** Latest admin-approved status update per flagship project id. */
+  projectUpdates: Record<string, ProjectUpdate>;
 }
 
 type Listener = (state: AppState, prev: AppState) => void;

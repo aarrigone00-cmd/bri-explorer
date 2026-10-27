@@ -31,6 +31,7 @@
         <nav class="site-nav" aria-label="Sections">
           <a href="#map-section">Map</a>
           <a href="#dashboard">Dashboard</a>
+          <a href="#news">News</a>
           <a href="#sources">Sources</a>
         </nav>
         <div id="auth-slot" class="auth-slot"></div>
@@ -67,7 +68,32 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4"/></svg>
             <span>Layers</span>
           </button>
+          <button id="ask-toggle" class="chip-button chip-button--accent" type="button" aria-label="Ask the Map" aria-expanded="false" aria-controls="ask-panel">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.6L12 15l-1.8-4.4L5.5 9l4.7-1.4L12 3Zm6 11 .9 2.1L21 17l-2.1.9L18 20l-.9-2.1L15 17l2.1-.9L18 14Z"/></svg>
+            <span>Ask the Map</span>
+          </button>
         </div>
+
+        <aside id="ask-panel" class="ask" aria-label="Ask the Map" hidden>
+          <div class="ask__head">
+            <div>
+              <h2>Ask the Map</h2>
+              <p class="muted small">AI answers from this site's data, with sources</p>
+            </div>
+            <div class="ask__head-actions">
+              <button id="ask-clear" class="icon-button" type="button" aria-label="New conversation" title="New conversation"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v6h6M20 20v-6h-6M5.6 15A7 7 0 0 0 18.4 17M18.4 9A7 7 0 0 0 5.6 7"/></svg></button>
+              <button id="ask-close" class="icon-button" type="button" aria-label="Close Ask the Map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+            </div>
+          </div>
+          <div id="ask-log" class="ask__log" aria-live="polite"></div>
+          <div id="ask-notice"></div>
+          <form id="ask-form" class="ask__form">
+            <label for="ask-input" class="visually-hidden">Your question</label>
+            <textarea id="ask-input" rows="2" maxlength="2000" placeholder="Ask about countries, projects or loans…"></textarea>
+            <button id="ask-send" class="button-primary" type="submit" aria-label="Send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12 20 4l-6 16-2.5-6.5L4 12Z"/></svg></button>
+          </form>
+          <p class="ask__disclaimer muted">AI can make mistakes. Check figures against the sources.</p>
+        </aside>
 
         <aside id="filters-panel" class="filters" aria-label="Map layers" hidden>
           <div class="filters__head">
@@ -109,6 +135,14 @@
           <p id="dashboard-subtitle" class="muted"></p>
         </div>
         <div id="dashboard-body"></div>
+      </section>
+
+      <section id="news" class="news" aria-labelledby="news-title">
+        <div class="section-head">
+          <h2 id="news-title">China &amp; the World</h2>
+          <p class="muted">A daily AI-researched digest of China's foreign policy news, with links to every source</p>
+        </div>
+        <div id="news-body"></div>
       </section>
 
       <section id="sources" class="sources" aria-labelledby="sources-title">
@@ -177,6 +211,23 @@
           </label>
           <button id="profile-submit" class="button-primary" type="submit">Save profile</button>
         </form>
+        <section id="briefing-section" class="profile__block" aria-labelledby="briefing-title">
+          <div class="profile__block-head">
+            <h3 id="briefing-title" class="profile__subhead">My briefing</h3>
+            <button id="briefing-generate" class="chip-button chip-button--small" type="button">Generate</button>
+          </div>
+          <p id="briefing-message" class="auth__message" role="status" hidden></p>
+          <div id="briefing-body" class="briefing"></div>
+        </section>
+        <section id="review-section" class="profile__block" aria-labelledby="review-title" hidden>
+          <div class="profile__block-head">
+            <h3 id="review-title" class="profile__subhead">Project updates to review <span id="review-count" class="muted"></span></h3>
+            <button id="watch-run" class="chip-button chip-button--small" type="button">Run Project Watcher</button>
+          </div>
+          <p id="review-message" class="auth__message" role="status" hidden></p>
+          <p id="watch-last" class="muted small"></p>
+          <ul id="review-list" class="review-list"></ul>
+        </section>
         <section aria-labelledby="profile-saved-title">
           <h3 id="profile-saved-title" class="profile__subhead">Saved on the map <span id="profile-saved-count" class="muted"></span></h3>
           <ul id="profile-saved" class="link-list profile__saved"></ul>
